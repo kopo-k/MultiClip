@@ -7,7 +7,7 @@ let tray: Tray | null = null;
 export const createTray = (win: BrowserWindow) => {
   const iconPath = path.join(app.getAppPath(), 'public', 'iconTemplate.png');
   const icon = nativeImage.createFromPath(iconPath);
-  console.log(iconPath);
+  console.log(iconPath); ///Users/k24032kk/src/MultiClip/public/iconTemplate.png
   icon.setTemplateImage(true); // macOSのダークモードに対応
 
   tray = new Tray(icon);

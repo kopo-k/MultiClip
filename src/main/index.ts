@@ -1,7 +1,9 @@
 import { app, BrowserWindow, nativeImage } from 'electron';
 import { registerHotKey, unregisterHotKey } from './hotkey';
+import { startClipboardWatcher } from './clipboard';
 import * as path from 'path';
 import { createTray } from './tray';
+import { setDockIcon } from './dock';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -25,19 +27,7 @@ const createMainWindow = () => {
 
 app.whenReady().then(() => {
   // Dock アイコンの設定
-  const iconPath = path.join(app.getAppPath(), 'public', 'app-icon.png');
-  const image = nativeImage.createFromPath(iconPath);
-  // console.log('Icon path:', iconPath);
-  // console.log('Exists:', !image.isEmpty());
-
-  // if (!image.isEmpty()) {
-  //   image.setTemplateImage(false);
-  //   app.dock.setIcon(image);
-  //   console.log('✅ Dockアイコン設定成功');
-  // } else {
-  //   console.warn('⚠️ Dockアイコン画像が読み込めませんでした');
-  // }
-  app.dock.show();
+  setDockIcon();
   // ウィンドウ作成
   mainWindow = createMainWindow();
 
@@ -46,6 +36,11 @@ app.whenReady().then(() => {
 
   // ホットキーの登録
   registerHotKey(mainWindow);
+
+  startClipboardWatcher((text) => {
+    console.log('📋 コピーされました:', text);
+    // ここで DB に保存する、UI に渡す など
+  });
 });
 
 app.on('activate', () => {
