@@ -1,4 +1,5 @@
 import { app, BrowserWindow, nativeImage } from 'electron';
+import { registerHotKey, unregisterHotKey } from './hotkey';
 import * as path from 'path';
 import { createTray } from './tray';
 
@@ -15,7 +16,7 @@ const createMainWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
     },
-    show: true, // 最初は非表示にしてTrayから表示
+    show: false, // 最初は非表示にしてTrayから表示
   });
 
   win.loadFile(path.join(app.getAppPath(), 'public', 'index.html'));
@@ -26,25 +27,25 @@ app.whenReady().then(() => {
   // Dock アイコンの設定
   const iconPath = path.join(app.getAppPath(), 'public', 'app-icon.png');
   const image = nativeImage.createFromPath(iconPath);
+  // console.log('Icon path:', iconPath);
+  // console.log('Exists:', !image.isEmpty());
 
-  console.log('Icon path:', iconPath);
-  console.log('Exists:', !image.isEmpty());
-
-  if (!image.isEmpty()) {
-    image.setTemplateImage(false);
-    app.dock.setIcon(image);
-    console.log('✅ Dockアイコン設定成功');
-  } else {
-    console.warn('⚠️ Dockアイコン画像が読み込めませんでした');
-  }
-
+  // if (!image.isEmpty()) {
+  //   image.setTemplateImage(false);
+  //   app.dock.setIcon(image);
+  //   console.log('✅ Dockアイコン設定成功');
+  // } else {
+  //   console.warn('⚠️ Dockアイコン画像が読み込めませんでした');
+  // }
   app.dock.show();
-
   // ウィンドウ作成
   mainWindow = createMainWindow();
 
   // Tray 作成（ウィンドウ渡す）
   createTray(mainWindow);
+
+  // ホットキーの登録
+  registerHotKey(mainWindow);
 });
 
 app.on('activate', () => {
