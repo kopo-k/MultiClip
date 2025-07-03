@@ -6,7 +6,7 @@ import { createTray } from './tray';
 import { setDockIcon } from './dock';
 
 let mainWindow: BrowserWindow | null = null;
-
+//ウィンドウを作成する
 const createMainWindow = () => {
   const win = new BrowserWindow({
     width: 600,
@@ -18,9 +18,9 @@ const createMainWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
     },
-    show: false, // 最初は非表示にしてTrayから表示
+    show: true, // 最初は非表示にしてTrayから表示
   });
-
+  //ウィンドウにHTMLを読み込む
   win.loadFile(path.join(app.getAppPath(), 'public', 'index.html'));
   return win;
 };
@@ -37,18 +37,23 @@ app.whenReady().then(() => {
   // ホットキーの登録
   registerHotKey(mainWindow);
 
+  // クリップボードの監視
   startClipboardWatcher((text) => {
-    console.log('📋 コピーされました:', text);
+    console.log('コピーされました:', text);
     // ここで DB に保存する、UI に渡す など
   });
 });
 
+//Dockアイコンをクリックしたときにウィンドウを表示する
 app.on('activate', () => {
+  //ウィンドウが閉じているかつ開いているウィンドウが1つも無い場合
   if (BrowserWindow.getAllWindows().length === 0 && mainWindow === null) {
     mainWindow = createMainWindow();
   }
 });
 
+//ウィンドウが全て閉じたときにアプリを終了する
 app.on('window-all-closed', () => {
+  //macOSではウィンドウを閉じてもアプリは終了しない
   if (process.platform !== 'darwin') app.quit();
 });
