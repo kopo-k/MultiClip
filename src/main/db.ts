@@ -30,14 +30,14 @@ export function addClip(content: string) {
 
   // 件数チェック → 古いもの削除
   const count = db.prepare(`SELECT COUNT(*) AS cnt FROM clips`).get() as { cnt: number };
-
+  // 件数が最大件数を超えたら古いものを削除する
   if (count.cnt > MAX_CLIPS) {
     const over = count.cnt - MAX_CLIPS;
     db.prepare(`
       DELETE FROM clips WHERE id IN (
         SELECT id FROM clips ORDER BY created_at ASC LIMIT ?
       )
-    `).run(over);
+    `).run(over); 
   }
 }
 

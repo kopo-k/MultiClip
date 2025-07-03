@@ -6,9 +6,11 @@
   "license": "MIT",
   "main": "dist/main/index.js",
   "scripts": {
-    "build": "tsc && cp -R public dist/public",
+    "vite": "vite",
+    "vite:build": "vite build",
+    "start": "npm run build && electron .",
+    "build": "tsc && cp -R public dist/public && npm run vite:build",
     "rebuild": "electron-rebuild",
-    "start": "npm run build && npm run rebuild && electron .",
     "dev": "tsc --watch",
     "dist": "npm run build && electron-builder"
   },
@@ -27,12 +29,18 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.0.8",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
     "electron": "^37.1.0",
     "electron-builder": "^26.0.12",
     "electron-rebuild": "^3.2.9",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
   },
   "dependencies": {
-    "better-sqlite3": "^12.2.0"
+    "better-sqlite3": "^12.2.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   }
 }

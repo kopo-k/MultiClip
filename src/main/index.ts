@@ -4,6 +4,8 @@ import { startClipboardWatcher } from './clipboard';
 import * as path from 'path';
 import { createTray } from './tray';
 import { setDockIcon } from './dock';
+import { getRecentClips } from './db';
+import { ipcMain } from 'electron';
 
 let mainWindow: BrowserWindow | null = null;
 //ウィンドウを作成する
@@ -20,8 +22,12 @@ const createMainWindow = () => {
     },
     show: true, // 最初は非表示にしてTrayから表示
   });
+  // UIから履歴取得をリクエストされたときの処理
+  ipcMain.handle('get-recent-clips', () => {
+    return getRecentClips(); // SQLiteから履歴を取得して返す
+  });
   //ウィンドウにHTMLを読み込む
-  win.loadFile(path.join(app.getAppPath(), 'public', 'index.html'));
+  win.loadFile(path.join(__dirname, '../renderer/index.html'));
   return win;
 };
 
@@ -41,6 +47,7 @@ app.whenReady().then(() => {
   startClipboardWatcher((text) => {
     console.log('コピーされました:', text);
     // ここで DB に保存する、UI に渡す など
+
   });
 });
 
@@ -57,3 +64,4 @@ app.on('window-all-closed', () => {
   //macOSではウィンドウを閉じてもアプリは終了しない
   if (process.platform !== 'darwin') app.quit();
 });
+
