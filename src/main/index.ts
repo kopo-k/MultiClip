@@ -7,7 +7,8 @@ import { setDockIcon } from './dock';
 import { getRecentClips } from './db';
 import { ipcMain } from 'electron';
 
-let mainWindow: BrowserWindow | null = null;
+let mainWindow: BrowserWindow | null = null; // ウィンドウのインスタンス
+let isQuitting = false; // 終了処理中フラグ
 //ウィンドウを作成する
 const createMainWindow = () => {
   const win = new BrowserWindow({
@@ -29,6 +30,7 @@ const createMainWindow = () => {
     e.preventDefault(); // デフォルトの終了動作をキャンセル
     win.hide();         // ウィンドウを非表示にする
   });
+
   // UIから履歴取得をリクエストされたときの処理
   ipcMain.handle('get-recent-clips', () => {
     return getRecentClips(); // SQLiteから履歴を取得して返す
@@ -74,3 +76,12 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+//終了処理中フラグを立てる
+app.on('before-quit', () => {
+  isQuitting = true;
+  if (mainWindow) {
+    mainWindow.destroy(); // 完全に破棄
+  }
+});
+
+export { isQuitting };

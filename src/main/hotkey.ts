@@ -1,5 +1,5 @@
 import { globalShortcut, BrowserWindow, app } from 'electron';
-
+import { isQuitting } from './index';
 /**
  * 指定したウィンドウにホットキー（Ctrl+Shift+C）を登録する関数
  * 押すたびに表示／非表示が切り替わる（トグル動作）
@@ -7,7 +7,7 @@ import { globalShortcut, BrowserWindow, app } from 'electron';
 export const registerHotKey = (win: BrowserWindow) => {
   app.whenReady().then(() => {
     const success = globalShortcut.register('Control+Shift+C', () => {
-      if (!win || win.isDestroyed()) return; // 破棄済みのウィンドウには触らない
+      if (!win || win.isDestroyed() || isQuitting) return; // 破棄済みのウィンドウには触らない
 
       if (win.isVisible()) {
         win.hide();       // ウィンドウが見えている → 隠す
