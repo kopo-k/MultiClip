@@ -26,6 +26,7 @@ const createMainWindow = () => {
   ipcMain.handle('get-recent-clips', () => {
     return getRecentClips(); // SQLiteから履歴を取得して返す
   });
+  console.log('path.join(__dirname, "preload.js"),',path.join(__dirname, 'preload.js'));
   //ウィンドウにHTMLを読み込む
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
   return win;
