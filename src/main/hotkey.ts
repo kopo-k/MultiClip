@@ -7,7 +7,7 @@ import { globalShortcut, BrowserWindow, app } from 'electron';
 export const registerHotKey = (win: BrowserWindow) => {
   app.whenReady().then(() => {
     const success = globalShortcut.register('Control+Shift+C', () => {
-      if (!win) return;
+      if (!win || win.isDestroyed()) return; // 破棄済みのウィンドウには触らない
 
       if (win.isVisible()) {
         win.hide();       // ウィンドウが見えている → 隠す

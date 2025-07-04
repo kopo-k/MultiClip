@@ -15,12 +15,19 @@ const createMainWindow = () => {
     height: 700,
     resizable: false,
     fullscreenable: false,
+    titleBarStyle: 'hiddenInset',
     title: 'MultiClip',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
     },
     show: true, // 最初は非表示にしてTrayから表示
+  });
+
+  // 「×」ボタンで終了せずに非表示にする
+  win.on('close', (e) => {
+    e.preventDefault(); // デフォルトの終了動作をキャンセル
+    win.hide();         // ウィンドウを非表示にする
   });
   // UIから履歴取得をリクエストされたときの処理
   ipcMain.handle('get-recent-clips', () => {
