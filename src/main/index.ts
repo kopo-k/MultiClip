@@ -46,8 +46,9 @@ app.whenReady().then(() => {
   // クリップボードの監視
   startClipboardWatcher((text) => {
     console.log('コピーされました:', text);
-    // ここで DB に保存する、UI に渡す など
-
+    if (mainWindow) {
+      mainWindow.webContents.send('clip-added'); // レンダラーに通知
+    }
   });
 });
 
