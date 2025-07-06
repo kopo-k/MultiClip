@@ -1,86 +1,82 @@
-import { app, BrowserWindow, nativeImage } from 'electron';
+import { app, BrowserWindow, nativeImage, ipcMain } from 'electron';
+import * as path from 'path';
 import { registerHotKey, unregisterHotKey } from './hotkey';
 import { startClipboardWatcher } from './clipboard';
-import * as path from 'path';
 import { createTray } from './tray';
 import { setDockIcon } from './dock';
 import { getRecentClips } from './db';
-import { ipcMain } from 'electron';
 
-let mainWindow: BrowserWindow | null = null; // ウィンドウのインスタンス
-let isQuitting = false; // 終了処理中フラグ
-//ウィンドウを作成する
+let mainWindow: BrowserWindow | null = null;
+let isQuitting = false;
+
+// メインウィンドウを作成する関数
 const createMainWindow = () => {
   const win = new BrowserWindow({
-    width: 600,
+    width: 500,
     height: 700,
     resizable: false,
-    fullscreenable: false,
-    titleBarStyle: 'hiddenInset',
-    title: 'MultiClip',
+    fullscreenable: false, //緑ボタン無効
+    titleBarStyle: 'hiddenInset', //タイトルバー非表示
+    title: 'MultiClip', //タイトル
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
     },
-    show: true, // 最初は非表示にしてTrayから表示
+    show: true, // 最初は非表示にする
   });
 
-  // 「×」ボタンで終了せずに非表示にする
-  win.on('close', (e) => {
-    e.preventDefault(); // デフォルトの終了動作をキャンセル
-    win.hide();         // ウィンドウを非表示にする
+  // どのデスクトップからでも呼び出せるようにする、フルスクリーンでも表示されるようにする
+  // win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+  win.on('close', (e) => { //閉じるボタンを押した時
+    if (!isQuitting) { //終了していない場合
+      e.preventDefault(); //デフォルトの挙動をキャンセル
+      win.hide(); //非表示にしてバックグラウンドに残す。
+    }
   });
 
-  // UIから履歴取得をリクエストされたときの処理
+  // クリップボードの履歴を取得するAPI
   ipcMain.handle('get-recent-clips', () => {
-    return getRecentClips(); // SQLiteから履歴を取得して返す
+    return getRecentClips(); //データベースから最近のコピー履歴（clips）を取得
   });
-  console.log('path.join(__dirname, "preload.js"),',path.join(__dirname, 'preload.js'));
-  //ウィンドウにHTMLを読み込む
+
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
   return win;
 };
 
 app.whenReady().then(() => {
-  // Dock アイコンの設定
   setDockIcon();
-  // ウィンドウ作成
   mainWindow = createMainWindow();
-
-  // Tray 作成（ウィンドウ渡す）
   createTray(mainWindow);
-
-  // ホットキーの登録
   registerHotKey(mainWindow);
-
-  // クリップボードの監視
+  //クリップボードの監視を開始する関数
   startClipboardWatcher((text) => {
     console.log('コピーされました:', text);
+    // ウィンドウが開いている場合はコピーされたテキストを送信
     if (mainWindow) {
-      mainWindow.webContents.send('clip-added'); // レンダラーに通知
+      mainWindow.webContents.send('clip-added');
     }
   });
 });
 
-//Dockアイコンをクリックしたときにウィンドウを表示する
+// アプリがアクティブになった時
 app.on('activate', () => {
-  //ウィンドウが閉じているかつ開いているウィンドウが1つも無い場合
+  // ウィンドウが閉じられている場合は新しいウィンドウを作成
   if (BrowserWindow.getAllWindows().length === 0 && mainWindow === null) {
     mainWindow = createMainWindow();
   }
 });
 
-//ウィンドウが全て閉じたときにアプリを終了する
 app.on('window-all-closed', () => {
-  //macOSではウィンドウを閉じてもアプリは終了しない
   if (process.platform !== 'darwin') app.quit();
 });
 
-//終了処理中フラグを立てる
+// アプリが終了する前に実行される関数
 app.on('before-quit', () => {
-  isQuitting = true;
-  if (mainWindow) {
-    mainWindow.destroy(); // 完全に破棄
+  isQuitting = true; //終了していることを示す
+  unregisterHotKey(); //ホットキーを解除
+  if (mainWindow) { //ウィンドウが開いている場合
+    mainWindow.destroy(); //ウィンドウを破棄
   }
 });
 
