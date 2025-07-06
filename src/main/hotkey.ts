@@ -1,14 +1,21 @@
 import { globalShortcut, BrowserWindow, app } from 'electron';
 import { isQuitting } from './index';
 
+let hotkeyReady = false;
+
 /**
  * 指定したウィンドウにホットキー（Ctrl+Shift+C）を登録する関数
  */
 export const registerHotKey = (win: BrowserWindow) => {
   // アプリが準備できたらホットキーを登録
   app.whenReady().then(() => {
+    setTimeout(() => {
+      hotkeyReady = true;
+    }, 1000);
     // ホットキーを登録
     const success = globalShortcut.register('Control+Shift+C', () => {
+      console.log('Hotkey triggered, win.isVisible():', win?.isVisible());
+
       // ウィンドウが破棄されている場合は何もしない
       if (!win || win.isDestroyed() || isQuitting) return;
 
