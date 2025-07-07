@@ -4,6 +4,7 @@ module.exports = {
     "./src/renderer/**/*.{js,ts,jsx,tsx}", // ← Reactコンポーネントのパス
     "./src/renderer/index.html"
   ],
+  darkMode: 'class',
   theme: {
     extend: {},
   },
