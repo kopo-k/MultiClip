@@ -56,10 +56,8 @@ const handleToggleFavorite = (id: number) => {
     <div className="p-4 w-full max-w-md mx-auto">
       {/* ヘッダー：アプリ名 + ホットキー + 設定アイコン */}
       <HeaderBar />
-
       {/* 検索バー */}
       <SearchBar search={search} setSearch={setSearch} />
-
       {/* タブ：履歴 / お気に入り / スニペット */}
       <TabBar currentTab={currentTab} onTabChange={setCurrentTab} />
       {/* 履歴リスト */}

@@ -1,6 +1,15 @@
 import { Search } from 'lucide-react';
 
-
+/**
+ * 検索バーコンポーネント
+ *
+ * @param search 現在の検索キーワード
+ * @param setSearch 検索キーワードを更新する関数
+ * @returns JSXの検索バー
+ *
+ * @example
+ * <SearchBar search={search} setSearch={setSearch} />
+ */
 const SearchBar = ({ search, setSearch }: { search: string; setSearch: (value: string) => void }) => {
   return (
     <div className="my-3 relative">
