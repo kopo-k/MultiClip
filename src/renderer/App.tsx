@@ -1,22 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, Search } from 'lucide-react';
 import ClipListItem from './components/ClipListItem';
 import TabBar from './components/TabBar';
 import HeaderBar from './components/HeaderBar';
+import SearchBar from './components/SearchBar';
 import ClipList from './components/ClipList';
 
+// Clip型を定義
 type Clip = {
-  id: number;
-  content: string;
-  tag?: string;
-  isFavorite?: boolean;
-  isSnippet?: boolean;
+  id: number; // 履歴のID
+  content: string; // コピーしたテキスト
+  tag?: string; // タグ（オプション）
+  isFavorite?: boolean; // お気に入り（オプション）
+  isSnippet?: boolean; // スニペット（オプション）
 };
 
 
 const App = () => {
+  // 履歴を管理するstate
   const [clips, setClips] = useState<Clip[]>([]);
+  // 現在選択されているタブ
   const [currentTab, setCurrentTab] = useState<'history' | 'favorites' | 'snippets'>('history');
+  // 検索フィルター
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -24,7 +29,7 @@ const App = () => {
     window.api.getRecentClips().then((data: Clip[]) => {
       setClips(data);
     });
-
+    // クリップが追加されたら履歴を更新
     window.api.onClipAdded(() => {
       window.api.getRecentClips().then((data: Clip[]) => {
         setClips(data);
@@ -37,11 +42,12 @@ const App = () => {
     clip.content.toLowerCase().includes(search.toLowerCase())
   );
 
-  // 関数追加
+  // 指定されたIDのクリップのお気に入り状態を反転（ON/OFF）させる
 const handleToggleFavorite = (id: number) => {
   setClips(prev =>
     prev.map(clip =>
-      clip.id === id ? { ...clip, isFavorite: !clip.isFavorite } : clip
+      //クリップのIDが、変更対象のIDと一致しているかを確認
+      clip.id === id ? { ...clip, isFavorite: !clip.isFavorite } : clip 
     )
   );
 };
@@ -52,15 +58,7 @@ const handleToggleFavorite = (id: number) => {
       <HeaderBar />
 
       {/* 検索バー */}
-      <div className="my-3">
-        <input
-          type="text"
-          placeholder="クリップを検索..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-        />
-      </div>
+      <SearchBar search={search} setSearch={setSearch} />
 
       {/* タブ：履歴 / お気に入り / スニペット */}
       <TabBar currentTab={currentTab} onTabChange={setCurrentTab} />
