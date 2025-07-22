@@ -67,4 +67,4 @@
 - **React + Tailwind CSS** – UI構築
 - **SQLite** – データの永続保存
 - **Preload API** – セキュアなRenderer通信
-- **Global Hotkey** – ⌘ + Shift + V でどこからでも起動
+- **Global Hotkey** – ⌘ + Shift + C でどこからでも起動
