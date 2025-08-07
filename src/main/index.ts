@@ -15,6 +15,7 @@ const createMainWindow = () => {
   const win = new BrowserWindow({
     width: 500,
     height: 700,
+    
     resizable: false,
     fullscreenable: true, // フルスクリーンSpaceでの補助ウィンドウとして許可
     titleBarStyle: 'hiddenInset',
