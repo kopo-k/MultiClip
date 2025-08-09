@@ -42,6 +42,11 @@ const App = () => {
     clip.content.toLowerCase().includes(search.toLowerCase())
   );
 
+  // 各タブの実際のアイテム数を計算
+  const historyCount = clips.length;
+  const favoritesCount = clips.filter(clip => clip.isFavorite).length;
+  const snippetsCount = clips.filter(clip => clip.isSnippet).length;
+
   // 指定されたIDのクリップのお気に入り状態を反転（ON/OFF）させる
 const handleToggleFavorite = (id: number) => {
   setClips(prev =>
@@ -59,7 +64,13 @@ const handleToggleFavorite = (id: number) => {
       {/* 検索バー */}
       <SearchBar search={search} setSearch={setSearch} />
       {/* タブ：履歴 / お気に入り / スニペット */}
-      <TabBar currentTab={currentTab} onTabChange={setCurrentTab} />
+      <TabBar 
+        currentTab={currentTab} 
+        onTabChange={setCurrentTab}
+        historyCount={historyCount}
+        favoritesCount={favoritesCount}
+        snippetsCount={snippetsCount}
+      />
       {/* 履歴リスト */}
       <ClipList
         clips={clips}

@@ -3,7 +3,6 @@ import ClipListItem from './ClipListItem';
 type Clip = {
   id: number;
   content: string;
-  tag?: string;
   isFavorite?: boolean;
   isSnippet?: boolean;
 };
@@ -33,7 +32,6 @@ const ClipList = ({ clips, currentTab, search, onToggleFavorite }: Props) => {
           <ClipListItem
             key={clip.id}
             content={clip.content}
-            tag={clip.tag || 'レポート'}
             isFavorite={!!clip.isFavorite}
             onToggleFavorite={() => onToggleFavorite(clip.id)}
           />

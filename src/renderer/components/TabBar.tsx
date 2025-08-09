@@ -3,27 +3,33 @@ type Tab = 'history' | 'favorites' | 'snippets';
 const TabBar = ({
   currentTab,
   onTabChange,
+  historyCount,
+  favoritesCount,
+  snippetsCount,
 }: {
   currentTab: Tab;
   onTabChange: (tab: Tab) => void;
+  historyCount: number;
+  favoritesCount: number;
+  snippetsCount: number;
 }) => {
   return (
     <div className="flex text-sm border-b border-gray-300 no-drag">
       <TabButton
         label="履歴"
-        count={2}
+        count={historyCount}
         active={currentTab === 'history'}
         onClick={() => onTabChange('history')}
       />
       <TabButton
         label="お気に入り"
-        count={1}
+        count={favoritesCount}
         active={currentTab === 'favorites'}
         onClick={() => onTabChange('favorites')}
       />
       <TabButton
         label="スニペット"
-        count={3}
+        count={snippetsCount}
         active={currentTab === 'snippets'}
         onClick={() => onTabChange('snippets')}
       />

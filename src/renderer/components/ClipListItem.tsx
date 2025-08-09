@@ -1,19 +1,15 @@
-import { Copy, Star, MoreVertical, Tag } from 'lucide-react';
+import { Copy, Star, MoreVertical } from 'lucide-react';
 
 type Props = {
   content: string;
-  tag: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
 };
 
-const ClipListItem = ({ content, tag, isFavorite, onToggleFavorite }: Props) => {
+const ClipListItem = ({ content, isFavorite, onToggleFavorite }: Props) => {
   return (
-    <li className="border rounded-lg p-3 bg-gray-50 text-sm flex flex-col no-drag ">
-      <span className="inline-flex items-center text-xs text-gray-500 mb-1">
-        <Tag className="w-3.5 h-3.5 mr-1" />
-        {tag}
-      </span>
+    <li className="border rounded-lg p-3 bg-gray-50 text-sm flex flex-col no-drag">
+      {/* タグ行を削除 */}
       <div className="flex justify-between items-center">
         <span className="truncate">{content}</span>
         <div className="flex gap-2 ml-2 shrink-0">
