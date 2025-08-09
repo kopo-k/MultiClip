@@ -9,7 +9,7 @@ type Props = {
 
 const ClipListItem = ({ content, tag, isFavorite, onToggleFavorite }: Props) => {
   return (
-    <li className="border rounded-lg p-3 bg-gray-50 text-sm flex flex-col">
+    <li className="border rounded-lg p-3 bg-gray-50 text-sm flex flex-col no-drag ">
       <span className="inline-flex items-center text-xs text-gray-500 mb-1">
         <Tag className="w-3.5 h-3.5 mr-1" />
         {tag}

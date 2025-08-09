@@ -8,5 +8,14 @@ module.exports = {
   theme: {
     extend: {},
   },
-  plugins: [],
+  
+plugins: [
+  function ({ addUtilities }) {
+    addUtilities({
+      '.draggable': { '-webkit-app-region': 'drag' },
+      '.no-drag': { '-webkit-app-region': 'no-drag' },
+    });
+  },
+]
 };
+

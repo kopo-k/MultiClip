@@ -8,7 +8,7 @@ const TabBar = ({
   onTabChange: (tab: Tab) => void;
 }) => {
   return (
-    <div className="flex text-sm border-b border-gray-300">
+    <div className="flex text-sm border-b border-gray-300 no-drag">
       <TabButton
         label="履歴"
         count={2}
