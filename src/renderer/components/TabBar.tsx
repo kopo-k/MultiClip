@@ -18,12 +18,14 @@ const TabBar = ({
       <TabButton
         label="履歴"
         count={historyCount}
+        maxCount={50}
         active={currentTab === 'history'}
         onClick={() => onTabChange('history')}
       />
       <TabButton
         label="お気に入り"
         count={favoritesCount}
+        maxCount={100}
         active={currentTab === 'favorites'}
         onClick={() => onTabChange('favorites')}
       />
@@ -40,21 +42,36 @@ const TabBar = ({
 const TabButton = ({
   label,
   count,
+  maxCount,
   active,
   onClick,
 }: {
   label: string;
   count: number;
+  maxCount?: number;
   active: boolean;
   onClick: () => void;
 }) => (
   <button
-    className={`flex-1 py-2 text-center border-b-2 ${
+    className={`flex-1 py-2 px-1 text-center border-b-2 ${
       active ? 'border-black font-semibold text-black' : 'border-transparent text-gray-500'
     }`}
     onClick={onClick}
   >
-    {label} ({count})
+    <div className="flex flex-col items-center">
+      <span className="text-sm">{label}</span>
+      <span className={`text-xs ${
+        maxCount && count >= maxCount 
+          ? 'text-red-600 font-bold' 
+          : maxCount && count >= maxCount * 0.9 
+          ? 'text-orange-600 font-semibold' 
+          : maxCount && count >= maxCount * 0.8 
+          ? 'text-yellow-600' 
+          : 'text-gray-400'
+      }`}>
+        {maxCount ? `${count}/${maxCount}` : `(${count})`}
+      </span>
+    </div>
   </button>
 );
 

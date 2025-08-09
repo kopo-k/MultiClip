@@ -16,8 +16,13 @@ export function startClipboardWatcher(onChange: (text: string) => void, interval
     const currentText = clipboard.readText();
     if (currentText && currentText !== lastText) {
       lastText = currentText;
-      addClip(currentText); // クリップボードの内容をDBに保存する
-      onChange(currentText); // 変化を通知
+      try {
+        addClip(currentText); // クリップボードの内容をDBに保存する
+        // データベース操作完了後に通知を送る
+        onChange(currentText); // 変化を通知
+      } catch (error) {
+        console.error('Failed to add clip to database:', error);
+      }
     }
   }, intervalMs);
 }

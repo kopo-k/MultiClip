@@ -8,6 +8,18 @@ declare global {
       getRecentClips: () => Promise<Clip[]>;
       //引数としてコールバック関数を受け取り、何も返さない関数
       onClipAdded: (callback: () => void) => void;
+      //スニペット用のショートカットを登録
+      registerSnippetShortcut: (shortcutKey: string, content: string) => Promise<boolean>;
+      //スニペット用のショートカットを解除
+      unregisterSnippetShortcut: (shortcutKey: string) => Promise<boolean>;
+      //すべてのスニペットショートカットを更新
+      updateSnippetShortcuts: (snippets: Array<{ shortcutKey: string; content: string; isEnabled: boolean }>) => Promise<boolean>;
+      //新しいスニペットを作成
+      createSnippet: (content: string, shortcutKey: string) => Promise<boolean>;
+      //クリップを更新
+      updateClip: (id: number, updates: any) => Promise<boolean>;
+      //クリップボードにテキストをコピー
+      copyToClipboard: (text: string) => Promise<boolean>;
     };
   }
 }
