@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { Clipboard, Settings, HelpCircle } from 'lucide-react';
 import HelpModal from './HelpModal';
 
-const HeaderBar = () => {
+interface HeaderBarProps {
+  onSettingsClick?: () => void;
+}
+
+const HeaderBar: React.FC<HeaderBarProps> = ({ onSettingsClick }) => {
   const [showHelp, setShowHelp] = useState(false);
 
   return (
@@ -14,7 +18,7 @@ const HeaderBar = () => {
           <h1 className="text-xl font-bold">MultiClip</h1>
         </div>
         <div className="flex gap-3 no-drag">
-          <button title="設定">
+          <button title="設定" onClick={onSettingsClick}>
             <Settings className="w-5 h-5 text-gray-600 hover:text-black" />
           </button>
           <button title="ヘルプ" onClick={() => setShowHelp(true)}>

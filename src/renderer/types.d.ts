@@ -20,6 +20,16 @@ declare global {
       updateClip: (id: number, updates: any) => Promise<boolean>;
       //クリップボードにテキストをコピー
       copyToClipboard: (text: string) => Promise<boolean>;
+      //設定関連API
+      loadSettings: () => Promise<any>;
+      saveSettings: (settings: any) => Promise<boolean>;
+      clearAllHistory: () => Promise<boolean>;
+      setAutoStart: (enable: boolean) => Promise<boolean>;
+      changeGlobalShortcut: (shortcut: string) => Promise<boolean>;
+      updateWindowSettings: (settings: { width?: number, height?: number, opacity?: number, alwaysOnTop?: boolean }) => Promise<boolean>;
+      changeTheme: (theme: string) => Promise<boolean>;
+      setHistoryLimit: (limit: number) => Promise<boolean>;
+      setFavoriteLimit: (limit: number) => Promise<boolean>;
     };
   }
 }

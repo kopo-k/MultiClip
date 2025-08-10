@@ -7,6 +7,7 @@ import SearchBar from './components/SearchBar';
 import ClipList from './components/ClipList';
 import SnippetEditModal from './components/SnippetEditModal';
 import SnippetCreateModal from './components/SnippetCreateModal';
+import SettingsModal from './components/SettingsModal';
 import Toast from './components/Toast';
 
 // Clip型を定義
@@ -33,6 +34,8 @@ const App = () => {
   const [editingSnippetId, setEditingSnippetId] = useState<number | null>(null);
   // スニペット作成モーダル
   const [isSnippetCreateModalOpen, setIsSnippetCreateModalOpen] = useState(false);
+  // 設定モーダル
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   // トースト通知
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
@@ -293,7 +296,7 @@ const handleCopy = async (content: string) => {
   return (
     <div className="p-4 w-full max-w-md mx-auto">
       {/* ヘッダー：アプリ名 + ホットキー + 設定アイコン */}
-      <HeaderBar />
+      <HeaderBar onSettingsClick={() => setIsSettingsModalOpen(true)} />
       {/* 検索バー */}
       <SearchBar search={search} setSearch={setSearch} />
       {/* タブ：履歴 / お気に入り / スニペット */}
@@ -343,6 +346,12 @@ const handleCopy = async (content: string) => {
         isOpen={isSnippetCreateModalOpen}
         onClose={() => setIsSnippetCreateModalOpen(false)}
         onCreate={handleCreateSnippet}
+      />
+      
+      {/* 設定モーダル */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
       />
       
       {/* トースト通知 */}

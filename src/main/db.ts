@@ -47,9 +47,9 @@ try {
   // カラムが既に存在する場合はエラーを無視
 }
 
-// 最大保存件数
-const MAX_HISTORY_CLIPS = 50; // 履歴の上限
-const MAX_FAVORITE_CLIPS = 100; // お気に入りの上限
+// 最大保存件数（動的に変更可能）
+let MAX_HISTORY_CLIPS = 50; // 履歴の上限
+let MAX_FAVORITE_CLIPS = 100; // お気に入りの上限
 
 /**
  * クリップボード履歴に追加（最大件数を超えたら古いデータを削除）
@@ -213,4 +213,48 @@ export function getSnippets(): {
     shortcut_key: string | null,
     is_enabled: number
   }[];
+}
+
+/**
+ * 全履歴データを削除（スニペットと お気に入り は保持）
+ */
+export function clearAllHistory() {
+  db.prepare(`DELETE FROM clips WHERE (is_snippet IS NULL OR is_snippet = 0) AND (is_favorite IS NULL OR is_favorite = 0)`).run();
+}
+
+/**
+ * 履歴保存件数の上限を設定
+ */
+export function setHistoryLimit(limit: number) {
+  MAX_HISTORY_CLIPS = limit;
+  
+  // 既存のデータが上限を超えている場合は削除
+  const count = db.prepare(`SELECT COUNT(*) AS cnt FROM clips WHERE (is_snippet IS NULL OR is_snippet = 0)`).get() as { cnt: number };
+  if (count.cnt > MAX_HISTORY_CLIPS) {
+    const over = count.cnt - MAX_HISTORY_CLIPS;
+    db.prepare(`
+      DELETE FROM clips WHERE id IN (
+        SELECT id FROM clips WHERE (is_snippet IS NULL OR is_snippet = 0) ORDER BY created_at ASC LIMIT ?
+      )
+    `).run(over);
+  }
+}
+
+/**
+ * お気に入り保存件数の上限を設定
+ */
+export function setFavoriteLimit(limit: number) {
+  MAX_FAVORITE_CLIPS = limit;
+  
+  // 既存のデータが上限を超えている場合は解除
+  const count = db.prepare(`SELECT COUNT(*) AS cnt FROM clips WHERE is_favorite = 1`).get() as { cnt: number };
+  if (count.cnt > MAX_FAVORITE_CLIPS) {
+    const over = count.cnt - MAX_FAVORITE_CLIPS;
+    db.prepare(`
+      UPDATE clips SET is_favorite = 0 
+      WHERE id IN (
+        SELECT id FROM clips WHERE is_favorite = 1 ORDER BY created_at ASC LIMIT ?
+      )
+    `).run(over);
+  }
 }

@@ -18,5 +18,16 @@ contextBridge.exposeInMainWorld('api', {
   updateClip: (id: number, updates: any) =>
     ipcRenderer.invoke('update-clip', id, updates),
   copyToClipboard: (text: string) =>
-    ipcRenderer.invoke('copy-to-clipboard', text)
+    ipcRenderer.invoke('copy-to-clipboard', text),
+  // 設定関連API
+  loadSettings: () => ipcRenderer.invoke('load-settings'),
+  saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
+  clearAllHistory: () => ipcRenderer.invoke('clear-all-history'),
+  setAutoStart: (enable: boolean) => ipcRenderer.invoke('set-auto-start', enable),
+  changeGlobalShortcut: (shortcut: string) => ipcRenderer.invoke('change-global-shortcut', shortcut),
+  updateWindowSettings: (settings: { width?: number, height?: number, opacity?: number, alwaysOnTop?: boolean }) => 
+    ipcRenderer.invoke('update-window-settings', settings),
+  changeTheme: (theme: string) => ipcRenderer.invoke('change-theme', theme),
+  setHistoryLimit: (limit: number) => ipcRenderer.invoke('set-history-limit', limit),
+  setFavoriteLimit: (limit: number) => ipcRenderer.invoke('set-favorite-limit', limit)
 });
