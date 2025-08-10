@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Settings, Monitor, Clock, Keyboard, Database, Info, HelpCircle } from 'lucide-react';
+import ReportModal from './ReportModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface AppSettings {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'history' | 'hotkey' | 'display' | 'data' | 'info'>('basic');
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
     autoStart: false,
     showWindowOnStartup: true,
@@ -578,9 +580,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                       <p><kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Cmd+Shift+C</kbd> アプリ表示/非表示</p>
                       <p><kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Enter</kbd> 選択したアイテムをコピー</p>
                       <p><kbd className="px-2 py-1 bg-gray-100 rounded text-xs">↑/↓</kbd> アイテム選択</p>
+                      <p><kbd className="px-2 py-1 bg-gray-100 rounded text-xs">⌘</kbd> + <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Click</kbd> お気に入り追加</p>
+                      <p><kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Esc</kbd> アプリを非表示</p>
                     </div>
                   </div>
-                  <button className="flex items-center gap-2 px-3 py-2 border rounded hover:bg-gray-50">
+                  <button 
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="flex items-center gap-2 px-3 py-2 border rounded hover:bg-gray-50"
+                  >
                     <HelpCircle className="w-4 h-4" />
                     問題の報告
                   </button>
@@ -609,6 +616,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
       </div>
+      
+      {/* 報告モーダル */}
+      <ReportModal 
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+      />
     </div>
   );
 };

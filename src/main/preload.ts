@@ -7,6 +7,10 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.removeAllListeners('clip-added');
     ipcRenderer.on('clip-added', callback);
   },
+  onSnippetFallback: (callback: (data: { shortcutKey: string; content: string; reason: string }) => void) => {
+    ipcRenderer.removeAllListeners('snippet-fallback');
+    ipcRenderer.on('snippet-fallback', (event, data) => callback(data));
+  },
   registerSnippetShortcut: (shortcutKey: string, content: string) => 
     ipcRenderer.invoke('register-snippet-shortcut', shortcutKey, content),
   unregisterSnippetShortcut: (shortcutKey: string) => 
@@ -32,5 +36,7 @@ contextBridge.exposeInMainWorld('api', {
   setFavoriteLimit: (limit: number) => ipcRenderer.invoke('set-favorite-limit', limit),
   startWindowDrag: () => ipcRenderer.invoke('start-window-drag'),
   getCurrentWindowPosition: () => ipcRenderer.invoke('get-current-window-position'),
-  getScreenInfo: () => ipcRenderer.invoke('get-screen-info')
+  getScreenInfo: () => ipcRenderer.invoke('get-screen-info'),
+  getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
+  submitReport: (reportData: any) => ipcRenderer.invoke('submit-report', reportData)
 });

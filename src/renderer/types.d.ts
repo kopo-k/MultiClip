@@ -8,6 +8,8 @@ declare global {
       getRecentClips: () => Promise<Clip[]>;
       //引数としてコールバック関数を受け取り、何も返さない関数
       onClipAdded: (callback: () => void) => void;
+      //スニペットフォールバック通知を受け取る
+      onSnippetFallback: (callback: (data: { shortcutKey: string; content: string; reason: string }) => void) => void;
       //スニペット用のショートカットを登録
       registerSnippetShortcut: (shortcutKey: string, content: string) => Promise<boolean>;
       //スニペット用のショートカットを解除
@@ -33,6 +35,8 @@ declare global {
       startWindowDrag: () => Promise<boolean>;
       getCurrentWindowPosition: () => Promise<{ x: number, y: number } | null>;
       getScreenInfo: () => Promise<any>;
+      getSystemInfo: () => Promise<any>;
+      submitReport: (reportData: any) => Promise<boolean>;
     };
   }
 }

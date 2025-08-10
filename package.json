@@ -19,7 +19,7 @@
     "productName": "MultiClip",
     "mac": {
       "target": "dmg",
-      "icon": "public/icon.png"
+      "icon": "public/icon.icns"
     },
     "files": [
       "dist/**/*",

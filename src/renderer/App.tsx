@@ -8,6 +8,7 @@ import ClipList from './components/ClipList';
 import SnippetEditModal from './components/SnippetEditModal';
 import SnippetCreateModal from './components/SnippetCreateModal';
 import SettingsModal from './components/SettingsModal';
+import ReportModal from './components/ReportModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import Toast from './components/Toast';
 
@@ -37,6 +38,8 @@ const App = () => {
   const [isSnippetCreateModalOpen, setIsSnippetCreateModalOpen] = useState(false);
   // 設定モーダル
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  // 報告モーダル
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   // トースト通知
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
@@ -83,6 +86,12 @@ const App = () => {
     };
 
     window.api.onClipAdded(handleClipAdded);
+
+    // スニペットフォールバック通知を受信
+    window.api.onSnippetFallback((data) => {
+      setToastMessage(`${data.reason} (${data.shortcutKey})`);
+      setShowToast(true);
+    });
     
     // クリーンアップは不要（preloadでremoveListenerが実装されていない）
   }, []);
@@ -362,6 +371,21 @@ const handleCopy = async (content: string) => {
     };
   }, [longPressTimer]);
 
+  // ショートカットキー（Cmd+Shift+R）で報告モーダルを開く
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey && event.shiftKey && event.key === 'R') {
+        event.preventDefault();
+        setIsReportModalOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <div 
@@ -431,6 +455,12 @@ const handleCopy = async (content: string) => {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+      />
+      
+      {/* 報告モーダル */}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
       />
       
       {/* トースト通知 */}

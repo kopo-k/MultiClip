@@ -44,13 +44,30 @@ export async function typeText(text: string, delay: number = 150): Promise<boole
           const hasAccessibility = await checkAccessibilityPermission();
           if (!hasAccessibility) {
             console.warn('Accessibility permission required for text typing on macOS');
+            console.warn('Please enable accessibility permission in System Preferences > Security & Privacy > Privacy > Accessibility');
             resolve(false);
             return;
           }
         }
         
-        // テキストを入力
-        robot.typeString(text);
+        // 現在のクリップボード内容を保存
+        const { clipboard } = require('electron');
+        const previousClipboard = clipboard.readText();
+        
+        // テキストを文字ごとに分割して入力（日本語対応）
+        for (const char of text) {
+          robot.typeString(char);
+          // 短い遅延を入れて安定性を向上
+          await new Promise(resolve => setTimeout(resolve, 5));
+        }
+        
+        // 元のクリップボード内容を復元
+        if (previousClipboard) {
+          setTimeout(() => {
+            clipboard.writeText(previousClipboard);
+          }, 100);
+        }
+        
         console.log(`✅ Text typed successfully: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`);
         resolve(true);
         

@@ -24,25 +24,27 @@ const HelpModal = ({ isOpen, onClose }: Props) => {
           <div>
             <h3 className="font-semibold">基本操作</h3>
             <ul className="list-disc list-inside">
-              <li>⌘+Shift+V でアプリを開く</li>
+              <li>⌘+Shift+C でアプリを表示/非表示</li>
               <li>テキストをコピーすると自動で履歴に追加</li>
-              <li>クリップをクリックして再コピー</li>
+              <li>アイテムをクリックまたはEnterキーで再コピー</li>
+              <li>↑/↓キーでアイテム選択</li>
             </ul>
           </div>
           <div>
             <h3 className="font-semibold">お気に入り</h3>
             <ul className="list-disc list-inside">
               <li>⭐ボタンでお気に入りに追加</li>
-              <li>よく使うテキストを保存</li>
-              <li>メモやタグで整理可能</li>
+              <li>よく使うテキストを永続保存</li>
+              <li>履歴制限とは別に管理</li>
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold">スニペット</h3>
+            <h3 className="font-semibold">設定</h3>
             <ul className="list-disc list-inside">
-              <li>Cmd+Option+1〜9 でクイック入力</li>
-              <li>よく使うコードや定型文に便利</li>
-              <li>有効/無効の切り替え可能</li>
+              <li>履歴・お気に入りの保存件数設定</li>
+              <li>ウィンドウサイズや位置の調整</li>
+              <li>透明度や常に最前面表示</li>
+              <li>テーマの変更（ライト/ダーク/システム追従）</li>
             </ul>
           </div>
         </div>

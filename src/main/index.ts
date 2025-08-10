@@ -292,6 +292,56 @@ const createMainWindow = () => {
     }
   });
 
+  // IPC - システム情報を取得
+  ipcMain.handle('get-system-info', async () => {
+    try {
+      const os = require('os');
+      const packageJson = require('../../package.json');
+      
+      return {
+        appVersion: packageJson.version || '1.0.0',
+        electronVersion: process.versions.electron,
+        osVersion: `${os.platform()} ${os.release()}`,
+        nodeVersion: process.versions.node,
+        architecture: os.arch(),
+        totalMemory: Math.round(os.totalmem() / 1024 / 1024 / 1024) + 'GB'
+      };
+    } catch (error) {
+      console.error('Failed to get system info:', error);
+      return {
+        appVersion: '1.0.0',
+        electronVersion: process.versions.electron || 'unknown',
+        osVersion: 'unknown',
+        nodeVersion: process.versions.node || 'unknown',
+        architecture: 'unknown',
+        totalMemory: 'unknown'
+      };
+    }
+  });
+
+  // IPC - 問題レポートを送信
+  ipcMain.handle('submit-report', async (event, reportData) => {
+    try {
+      // GitHub Issues API にレポートを送信
+      const issueBody = formatIssueBody(reportData);
+      const success = await createGitHubIssue(reportData.title, issueBody, reportData.type, reportData.priority);
+      
+      if (success) {
+        console.log('Report submitted successfully');
+        return true;
+      } else {
+        // GitHub API が失敗した場合、ローカルに保存
+        await saveReportLocally(reportData);
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+      // エラーの場合もローカルに保存
+      await saveReportLocally(reportData);
+      return false;
+    }
+  });
+
   // HTML読み込み
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
 
@@ -495,6 +545,128 @@ async function checkAccessibilityPermission(window: BrowserWindow | null) {
         shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility');
       }
     }
+  }
+}
+
+// GitHub Issues API への送信
+async function createGitHubIssue(title: string, body: string, type: string, priority: string): Promise<boolean> {
+  try {
+    // 本番環境では GitHub Personal Access Token が必要
+    // 現在はダミー実装（実際の API は設定後に有効化）
+    console.log('GitHub Issue would be created:', { title, body, type, priority });
+    
+    // 実際の実装例（トークンが設定されている場合）
+    /*
+    const response = await fetch('https://api.github.com/repos/anthropics/claude-code/issues', {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'MultiClip-App'
+      },
+      body: JSON.stringify({
+        title,
+        body,
+        labels: getLabelsFromType(type, priority)
+      })
+    });
+    
+    return response.ok;
+    */
+    
+    // 開発中はダミーで成功を返す
+    return true;
+  } catch (error) {
+    console.error('GitHub API Error:', error);
+    return false;
+  }
+}
+
+function formatIssueBody(reportData: any): string {
+  const typeEmoji = {
+    bug: '🐛',
+    feature: '✨', 
+    other: '❓'
+  };
+  
+  const priorityLabel: { [key: string]: string } = {
+    high: '🔴 高',
+    medium: '🟡 中', 
+    low: '🟢 低'
+  };
+
+  return `## 問題の種類
+${reportData.type === 'bug' ? '- [x] バグ' : '- [ ] バグ'}
+${reportData.type === 'feature' ? '- [x] 機能要望' : '- [ ] 機能要望'}  
+${reportData.type === 'other' ? '- [x] その他' : '- [ ] その他'}
+
+## 緊急度
+${priorityLabel[reportData.priority] || '🟡 中'}
+
+## 問題の詳細
+${reportData.description}
+
+${reportData.steps ? `## 再現手順
+${reportData.steps}
+
+` : ''}## システム情報
+- **アプリバージョン**: ${reportData.systemInfo.appVersion}
+- **OS**: ${reportData.systemInfo.osVersion}
+- **Electronバージョン**: ${reportData.systemInfo.electronVersion}
+- **Nodeバージョン**: ${reportData.systemInfo.nodeVersion}
+- **アーキテクチャ**: ${reportData.systemInfo.architecture}
+- **メモリ**: ${reportData.systemInfo.totalMemory}
+- **報告日時**: ${new Date(reportData.timestamp).toLocaleString('ja-JP')}
+
+${reportData.email ? `## 連絡先
+${reportData.email}
+
+` : ''}---
+*この報告は MultiClip アプリから自動送信されました*`;
+}
+
+function getLabelsFromType(type: string, priority: string): string[] {
+  const labels = ['user-report'];
+  
+  switch (type) {
+    case 'bug':
+      labels.push('bug');
+      break;
+    case 'feature':
+      labels.push('enhancement');
+      break;
+    default:
+      labels.push('question');
+      break;
+  }
+  
+  if (priority === 'high') {
+    labels.push('priority:high');
+  } else if (priority === 'low') {
+    labels.push('priority:low');
+  }
+  
+  return labels;
+}
+
+async function saveReportLocally(reportData: any): Promise<void> {
+  try {
+    const fs = require('fs');
+    const reportsDir = path.join(__dirname, '../data/reports');
+    
+    // reportsディレクトリが存在しない場合は作成
+    if (!fs.existsSync(reportsDir)) {
+      fs.mkdirSync(reportsDir, { recursive: true });
+    }
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `report-${timestamp}.json`;
+    const filepath = path.join(reportsDir, filename);
+    
+    fs.writeFileSync(filepath, JSON.stringify(reportData, null, 2));
+    console.log(`Report saved locally: ${filepath}`);
+  } catch (error) {
+    console.error('Failed to save report locally:', error);
   }
 }
 

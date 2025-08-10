@@ -1,9 +1,11 @@
 import Database from 'better-sqlite3';
 import * as path from 'path';
 import * as fs from 'fs';
+import { app } from 'electron';
 
-// DBファイルのパス
-const dbPath = path.join(__dirname, '../../data/clipboard.db'); //
+// DBファイルのパス（ユーザーデータディレクトリを使用）
+const userDataPath = app.getPath('userData');
+const dbPath = path.join(userDataPath, 'clipboard.db');
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
 // データベース接続（なければ作成）

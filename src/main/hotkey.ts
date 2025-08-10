@@ -52,25 +52,49 @@ export const registerHotKey = (win: BrowserWindow, shortcut = 'Control+Shift+C')
  */
 export const registerSnippetShortcut = (shortcutKey: string, content: string): boolean => {
   if (!hotkeyReady) {
-    console.warn('Hotkey system not ready yet');
+    console.warn('Hotkey system not ready yet, retrying in 1 second...');
+    // ホットキーシステムが準備されるまで待機
+    setTimeout(() => registerSnippetShortcut(shortcutKey, content), 1000);
     return false;
   }
 
   try {
     const success = globalShortcut.register(shortcutKey, () => {
       if (!isQuitting) {
+        console.log(`Snippet shortcut triggered: ${shortcutKey}`);
+        
         // テキストを直接入力
-        typeText(content, process.platform === 'darwin' ? 200 : 150).then((success) => {
-          if (!success) {
+        typeText(content, process.platform === 'darwin' ? 300 : 200).then((success) => {
+          if (success) {
+            console.log(`✅ Snippet typed successfully: ${shortcutKey} -> ${content.substring(0, 50)}...`);
+          } else {
             // フォールバックとしてクリップボードに保存
             clipboard.writeText(content);
-            console.log(`Fallback to clipboard: ${shortcutKey} -> ${content.substring(0, 50)}...`);
+            console.log(`⚠️ Fallback to clipboard: ${shortcutKey} -> ${content.substring(0, 50)}...`);
+            
+            // ユーザーに通知
+            if (currentWindow && !currentWindow.isDestroyed()) {
+              currentWindow.webContents.send('snippet-fallback', { 
+                shortcutKey, 
+                content: content.substring(0, 50) + '...',
+                reason: 'テキスト入力に失敗したため、クリップボードにコピーしました'
+              });
+            }
           }
         }).catch((error) => {
           console.error('Failed to type snippet:', error);
           // フォールバックとしてクリップボードに保存
           clipboard.writeText(content);
-          console.log(`Fallback to clipboard: ${shortcutKey} -> ${content.substring(0, 50)}...`);
+          console.log(`⚠️ Error fallback to clipboard: ${shortcutKey} -> ${content.substring(0, 50)}...`);
+          
+          // ユーザーに通知
+          if (currentWindow && !currentWindow.isDestroyed()) {
+            currentWindow.webContents.send('snippet-fallback', { 
+              shortcutKey, 
+              content: content.substring(0, 50) + '...',
+              reason: 'エラーが発生したため、クリップボードにコピーしました'
+            });
+          }
         });
       }
     });
@@ -79,7 +103,7 @@ export const registerSnippetShortcut = (shortcutKey: string, content: string): b
       snippetShortcuts.set(shortcutKey, content);
       console.log(`✅ Snippet shortcut registered: ${shortcutKey}`);
     } else {
-      console.error(`❌ Failed to register snippet shortcut: ${shortcutKey}`);
+      console.error(`❌ Failed to register snippet shortcut: ${shortcutKey} (already in use or invalid)`);
     }
 
     return success;
