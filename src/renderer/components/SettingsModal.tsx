@@ -14,6 +14,8 @@ interface AppSettings {
   globalShortcut: string;
   theme: 'light' | 'dark' | 'system';
   windowSize: { width: number; height: number };
+  windowPosition: { x: number; y: number };
+  windowPositionMode: 'center' | 'left-bottom' | 'center-bottom' | 'right-bottom' | 'remember-last' | 'custom';
   opacity: number;
   alwaysOnTop: boolean;
 }
@@ -28,9 +30,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     globalShortcut: 'Cmd+Shift+C',
     theme: 'system',
     windowSize: { width: 500, height: 500 },
+    windowPosition: { x: -1, y: -1 },
+    windowPositionMode: 'center',
     opacity: 100,
     alwaysOnTop: false
   });
+
 
   useEffect(() => {
     if (isOpen) {
@@ -43,7 +48,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     try {
       const loadedSettings = await window.api.loadSettings();
       if (loadedSettings) {
-        setSettings(loadedSettings);
+        // 設定にwindowPositionが存在しない場合はデフォルト値を設定
+        const safeSettings = {
+          ...loadedSettings,
+          windowPosition: loadedSettings.windowPosition || { x: -1, y: -1 },
+          windowPositionMode: loadedSettings.windowPositionMode || 'center'
+        };
+        setSettings(safeSettings);
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -77,6 +88,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       await window.api.updateWindowSettings({
         width: settings.windowSize.width,
         height: settings.windowSize.height,
+        x: settings.windowPosition?.x ?? -1,
+        y: settings.windowPosition?.y ?? -1,
         opacity: settings.opacity,
         alwaysOnTop: settings.alwaysOnTop
       });
@@ -100,6 +113,50 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       .replace(/Ctrl/g, 'Control')
       .replace(/Alt/g, 'Alt')
       .replace(/Shift/g, 'Shift');
+  };
+
+  // ポジションモードから座標を計算
+  const calculatePositionFromMode = async (mode: string) => {
+    try {
+      const screenInfo = await window.api.getScreenInfo();
+      const { width: screenWidth, height: screenHeight } = screenInfo.primaryDisplay.workAreaSize;
+      const windowWidth = settings.windowSize.width;
+      const windowHeight = settings.windowSize.height;
+      
+      switch (mode) {
+        case 'center':
+          return { 
+            x: Math.round((screenWidth - windowWidth) / 2), 
+            y: Math.round((screenHeight - windowHeight) / 2) 
+          };
+        case 'left-bottom':
+          return { 
+            x: 20, 
+            y: screenHeight - windowHeight - 20 
+          };
+        case 'center-bottom':
+          return { 
+            x: Math.round((screenWidth - windowWidth) / 2), 
+            y: screenHeight - windowHeight - 20 
+          };
+        case 'right-bottom':
+          return { 
+            x: screenWidth - windowWidth - 20, 
+            y: screenHeight - windowHeight - 20 
+          };
+        case 'remember-last':
+          // 現在の位置を取得して記憶
+          return await window.api.getCurrentWindowPosition();
+        case 'custom':
+          // 現在の設定値をそのまま使用
+          return settings.windowPosition;
+        default:
+          return { x: -1, y: -1 };
+      }
+    } catch (error) {
+      console.error('Failed to calculate position:', error);
+      return null;
+    }
   };
 
   const handleSettingChange = async (key: keyof AppSettings, value: any) => {
@@ -136,6 +193,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             width: value.width, 
             height: value.height 
           });
+          break;
+        case 'windowPosition':
+          await window.api.updateWindowSettings({ 
+            x: value.x, 
+            y: value.y 
+          });
+          break;
+        case 'windowPositionMode':
+          // ポジションモードの変更時は位置も自動計算
+          const calculatedPosition = await calculatePositionFromMode(value);
+          if (calculatedPosition) {
+            setSettings(prev => ({
+              ...prev,
+              windowPosition: calculatedPosition,
+              windowPositionMode: value
+            }));
+            await window.api.updateWindowSettings({ 
+              x: calculatedPosition.x, 
+              y: calculatedPosition.y 
+            });
+          }
           break;
       }
     } catch (error) {
@@ -179,6 +257,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded"
+            style={{ cursor: 'pointer' }}
           >
             <X className="w-5 h-5" />
           </button>
@@ -363,6 +442,82 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                           <span>1000px</span>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">ウィンドウ初期位置</label>
+                    <div className="space-y-3">
+                      <select
+                        value={settings.windowPositionMode}
+                        onChange={(e) => handleSettingChange('windowPositionMode', e.target.value)}
+                        className="w-full p-2 border rounded"
+                      >
+                        <option value="center">画面中央</option>
+                        <option value="left-bottom">左下</option>
+                        <option value="center-bottom">中央下</option>
+                        <option value="right-bottom">右下</option>
+                        <option value="remember-last">最後の位置を記憶</option>
+                        <option value="custom">カスタム位置</option>
+                      </select>
+                      
+                      {settings.windowPositionMode === 'custom' && (
+                        <div className="flex gap-4 mt-3">
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">X座標</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="2000"
+                              value={settings.windowPosition?.x === -1 ? 100 : settings.windowPosition?.x || 100}
+                              onChange={(e) => {
+                                const x = parseInt(e.target.value) || 0;
+                                handleSettingChange('windowPosition', {
+                                  ...(settings.windowPosition || { x: -1, y: -1 }),
+                                  x: Math.max(0, Math.min(2000, x))
+                                });
+                              }}
+                              className="w-20 p-1 border rounded text-center"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Y座標</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="2000"
+                              value={settings.windowPosition?.y === -1 ? 100 : settings.windowPosition?.y || 100}
+                              onChange={(e) => {
+                                const y = parseInt(e.target.value) || 0;
+                                handleSettingChange('windowPosition', {
+                                  ...(settings.windowPosition || { x: -1, y: -1 }),
+                                  y: Math.max(0, Math.min(2000, y))
+                                });
+                              }}
+                              className="w-20 p-1 border rounded text-center"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const currentPos = await window.api.getCurrentWindowPosition();
+                                if (currentPos) {
+                                  handleSettingChange('windowPosition', currentPos);
+                                }
+                              } catch (error) {
+                                console.error('Failed to get current position:', error);
+                              }
+                            }}
+                            className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                          >
+                            現在位置を取得
+                          </button>
+                        </div>
+                      )}
+                      
+                      <p className="text-xs text-gray-500">
+                        アプリ起動時のウィンドウ表示位置を設定します
+                      </p>
                     </div>
                   </div>
                   <div>

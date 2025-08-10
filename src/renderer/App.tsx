@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Settings, Search } from 'lucide-react';
 import ClipListItem from './components/ClipListItem';
 import TabBar from './components/TabBar';
@@ -8,6 +8,7 @@ import ClipList from './components/ClipList';
 import SnippetEditModal from './components/SnippetEditModal';
 import SnippetCreateModal from './components/SnippetCreateModal';
 import SettingsModal from './components/SettingsModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import Toast from './components/Toast';
 
 // Clip型を定義
@@ -40,13 +41,22 @@ const App = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
 
+  // ウィンドウドラッグ機能
+  const appRef = useRef<HTMLDivElement>(null);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   // データベースからクリップを取得してフォーマット
   const fetchAndUpdateClips = async () => {
     try {
       const data = await window.api.getRecentClips();
+      if (!data || !Array.isArray(data)) {
+        console.error('Invalid data received from getRecentClips');
+        return;
+      }
       const formattedClips: Clip[] = data.map((item: any) => ({
         id: item.id,
-        content: item.content,
+        content: item.content || '',
         isFavorite: item.is_favorite === 1,
         isSnippet: item.is_snippet === 1,
         shortcutKey: item.shortcut_key || undefined,
@@ -56,6 +66,7 @@ const App = () => {
       console.log('Updated clips:', formattedClips.length, 'total items');
     } catch (error) {
       console.error('Failed to fetch clips:', error);
+      setClips([]); // エラー時は空配列を設定
     }
   };
 
@@ -293,12 +304,78 @@ const handleCopy = async (content: string) => {
   }
 };
 
+  // ウィンドウドラッグ機能のイベントハンドラー
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // 入力フィールドやボタンなど、対話可能要素の場合はドラッグを開始しない
+    const target = e.target as HTMLElement;
+    const isInputElement = target instanceof HTMLInputElement;
+    const isInteractiveElement = target.tagName === 'INPUT' || 
+                                  target.tagName === 'BUTTON' || 
+                                  target.tagName === 'SELECT' || 
+                                  target.tagName === 'TEXTAREA' ||
+                                  (isInputElement && target.type === 'range') ||
+                                  target.closest('button') ||
+                                  target.closest('input') ||
+                                  target.closest('select') ||
+                                  target.closest('textarea');
+    
+    if (isInteractiveElement) return;
+    
+    // 長押しタイマーを開始
+    const timer = setTimeout(() => {
+      setIsDragging(true);
+      // CSSでドラッグ可能にする
+      if (appRef.current) {
+        (appRef.current.style as any).webkitAppRegion = 'drag';
+        // 数秒後に元に戻す（ドラッグ完了後）
+        setTimeout(() => {
+          if (appRef.current) {
+            (appRef.current.style as any).webkitAppRegion = 'no-drag';
+          }
+          setIsDragging(false);
+        }, 100);
+      }
+    }, 300); // 300ms長押し
+    
+    setLongPressTimer(timer);
+  };
+
+  const handleMouseUp = () => {
+    // 長押しタイマーをクリア
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+    // ドラッグを無効化
+    if (appRef.current) {
+      (appRef.current.style as any).webkitAppRegion = 'no-drag';
+    }
+    setIsDragging(false);
+  };
+
+  // コンポーネントがアンマウントされる時にタイマーをクリア
+  useEffect(() => {
+    return () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+      }
+    };
+  }, [longPressTimer]);
+
   return (
-    <div className="p-4 w-full max-w-md mx-auto">
+    <ErrorBoundary>
+      <div 
+        ref={appRef}
+        className={`p-4 w-full max-w-md mx-auto select-none ${isDragging ? 'cursor-grabbing' : ''}`}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+      >
       {/* ヘッダー：アプリ名 + ホットキー + 設定アイコン */}
       <HeaderBar onSettingsClick={() => setIsSettingsModalOpen(true)} />
       {/* 検索バー */}
-      <SearchBar search={search} setSearch={setSearch} />
+      <div className="select-text">
+        <SearchBar search={search} setSearch={setSearch} />
+      </div>
       {/* タブ：履歴 / お気に入り / スニペット */}
       <TabBar 
         currentTab={currentTab} 
@@ -308,18 +385,20 @@ const handleCopy = async (content: string) => {
         snippetsCount={snippetsCount}
       />
       {/* 履歴リスト */}
-      <ClipList
-        clips={clips}
-        currentTab={currentTab}
-        search={search}
-        onToggleFavorite={handleToggleFavorite}
-        onToggleSnippet={handleToggleSnippet}
-        onEditSnippet={handleEditSnippet}
-        onDeleteSnippet={handleDeleteSnippet}
-        onToggleSnippetEnabled={handleToggleSnippetEnabled}
-        onCreateNewSnippet={() => setIsSnippetCreateModalOpen(true)}
-        onCopy={handleCopy}
-      />
+      <div className="select-text">
+        <ClipList
+          clips={clips}
+          currentTab={currentTab}
+          search={search}
+          onToggleFavorite={handleToggleFavorite}
+          onToggleSnippet={handleToggleSnippet}
+          onEditSnippet={handleEditSnippet}
+          onDeleteSnippet={handleDeleteSnippet}
+          onToggleSnippetEnabled={handleToggleSnippetEnabled}
+          onCreateNewSnippet={() => setIsSnippetCreateModalOpen(true)}
+          onCopy={handleCopy}
+        />
+      </div>
       
       {/* スニペット編集モーダル */}
       <SnippetEditModal
@@ -360,7 +439,8 @@ const handleCopy = async (content: string) => {
         isVisible={showToast}
         onHide={() => setShowToast(false)}
       />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 };
 

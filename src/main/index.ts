@@ -109,6 +109,8 @@ const createMainWindow = () => {
         globalShortcut: 'Cmd+Shift+C',
         theme: 'system',
         windowSize: { width: 500, height: 500 },
+        windowPosition: { x: -1, y: -1 },
+        windowPositionMode: 'center',
         opacity: 100,
         alwaysOnTop: false
       };
@@ -179,6 +181,8 @@ const createMainWindow = () => {
   ipcMain.handle('update-window-settings', async (event, settings: { 
     width?: number, 
     height?: number, 
+    x?: number,
+    y?: number,
     opacity?: number, 
     alwaysOnTop?: boolean 
   }) => {
@@ -189,6 +193,19 @@ const createMainWindow = () => {
         const safeHeight = Math.max(400, Math.min(1200, settings.height));
         win.setSize(safeWidth, safeHeight);
         console.log(`Window size updated to: ${safeWidth}x${safeHeight}`);
+      }
+      if (settings.x !== undefined && settings.y !== undefined) {
+        // ウィンドウ位置を設定（-1の場合は中央配置）
+        if (settings.x === -1 || settings.y === -1) {
+          win.center();
+          console.log('Window centered');
+        } else {
+          // 安全な範囲内で位置を制限
+          const safeX = Math.max(0, Math.min(2000, settings.x));
+          const safeY = Math.max(0, Math.min(2000, settings.y));
+          win.setPosition(safeX, safeY);
+          console.log(`Window position updated to: ${safeX}, ${safeY}`);
+        }
       }
       if (settings.opacity !== undefined) {
         // 透明度も安全な範囲内で制限
@@ -239,8 +256,58 @@ const createMainWindow = () => {
     }
   });
 
+  // IPC - ウィンドウドラッグ開始（実際にはCSS側で処理）
+  ipcMain.handle('start-window-drag', async () => {
+    try {
+      // CSS の -webkit-app-region: drag で処理されるため、ここでは成功を返すのみ
+      return true;
+    } catch (error) {
+      console.error('Failed to start window drag:', error);
+      return false;
+    }
+  });
+
+  // IPC - 現在のウィンドウ位置を取得
+  ipcMain.handle('get-current-window-position', async () => {
+    try {
+      const [x, y] = win.getPosition();
+      return { x, y };
+    } catch (error) {
+      console.error('Failed to get current window position:', error);
+      return null;
+    }
+  });
+
+  // IPC - スクリーン情報を取得
+  ipcMain.handle('get-screen-info', async () => {
+    try {
+      const { screen } = require('electron');
+      return {
+        primaryDisplay: screen.getPrimaryDisplay(),
+        allDisplays: screen.getAllDisplays()
+      };
+    } catch (error) {
+      console.error('Failed to get screen info:', error);
+      return null;
+    }
+  });
+
   // HTML読み込み
   win.loadFile(path.join(__dirname, '../renderer/index.html'));
+
+  // 開発中はDevToolsを開く
+  if (process.env.NODE_ENV === 'development') {
+    win.webContents.openDevTools();
+  }
+
+  // レンダリングプロセスのエラーをキャッチ
+  win.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
+  });
+
+  win.webContents.on('render-process-gone', (event, details) => {
+    console.error('Renderer process crashed:', details);
+  });
 
   return win;
 };
@@ -262,6 +329,16 @@ app.whenReady().then(async () => {
         const safeWidth = Math.max(400, Math.min(1600, settings.windowSize.width));
         const safeHeight = Math.max(400, Math.min(1200, settings.windowSize.height));
         mainWindow.setSize(safeWidth, safeHeight);
+      }
+      if (settings.windowPosition) {
+        // ウィンドウ位置を設定（-1の場合は中央配置）
+        if (settings.windowPosition.x === -1 || settings.windowPosition.y === -1) {
+          mainWindow.center();
+        } else {
+          const safeX = Math.max(0, Math.min(2000, settings.windowPosition.x));
+          const safeY = Math.max(0, Math.min(2000, settings.windowPosition.y));
+          mainWindow.setPosition(safeX, safeY);
+        }
       }
       if (settings.opacity !== undefined) {
         const safeOpacity = Math.max(0.7, Math.min(1.0, settings.opacity / 100));
@@ -359,8 +436,33 @@ app.on('window-all-closed', () => {
 });
 
 // 終了処理
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
   isQuitting = true;
+  
+  // 「最後の位置を記憶」が設定されている場合、現在位置を保存
+  if (mainWindow) {
+    try {
+      const fs = require('fs');
+      const settingsPath = path.join(__dirname, '../data/settings.json');
+      
+      if (fs.existsSync(settingsPath)) {
+        const data = fs.readFileSync(settingsPath, 'utf8');
+        const settings = JSON.parse(data);
+        
+        if (settings.windowPositionMode === 'remember-last') {
+          const [x, y] = mainWindow.getPosition();
+          settings.windowPosition = { x, y };
+          
+          // 設定を保存
+          fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+          console.log('Last window position saved:', { x, y });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save last window position:', error);
+    }
+  }
+  
   unregisterHotKey();
   if (mainWindow) {
     mainWindow.destroy();

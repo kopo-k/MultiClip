@@ -25,9 +25,12 @@ contextBridge.exposeInMainWorld('api', {
   clearAllHistory: () => ipcRenderer.invoke('clear-all-history'),
   setAutoStart: (enable: boolean) => ipcRenderer.invoke('set-auto-start', enable),
   changeGlobalShortcut: (shortcut: string) => ipcRenderer.invoke('change-global-shortcut', shortcut),
-  updateWindowSettings: (settings: { width?: number, height?: number, opacity?: number, alwaysOnTop?: boolean }) => 
+  updateWindowSettings: (settings: { width?: number, height?: number, x?: number, y?: number, opacity?: number, alwaysOnTop?: boolean }) => 
     ipcRenderer.invoke('update-window-settings', settings),
   changeTheme: (theme: string) => ipcRenderer.invoke('change-theme', theme),
   setHistoryLimit: (limit: number) => ipcRenderer.invoke('set-history-limit', limit),
-  setFavoriteLimit: (limit: number) => ipcRenderer.invoke('set-favorite-limit', limit)
+  setFavoriteLimit: (limit: number) => ipcRenderer.invoke('set-favorite-limit', limit),
+  startWindowDrag: () => ipcRenderer.invoke('start-window-drag'),
+  getCurrentWindowPosition: () => ipcRenderer.invoke('get-current-window-position'),
+  getScreenInfo: () => ipcRenderer.invoke('get-screen-info')
 });

@@ -26,10 +26,13 @@ declare global {
       clearAllHistory: () => Promise<boolean>;
       setAutoStart: (enable: boolean) => Promise<boolean>;
       changeGlobalShortcut: (shortcut: string) => Promise<boolean>;
-      updateWindowSettings: (settings: { width?: number, height?: number, opacity?: number, alwaysOnTop?: boolean }) => Promise<boolean>;
+      updateWindowSettings: (settings: { width?: number, height?: number, x?: number, y?: number, opacity?: number, alwaysOnTop?: boolean }) => Promise<boolean>;
       changeTheme: (theme: string) => Promise<boolean>;
       setHistoryLimit: (limit: number) => Promise<boolean>;
       setFavoriteLimit: (limit: number) => Promise<boolean>;
+      startWindowDrag: () => Promise<boolean>;
+      getCurrentWindowPosition: () => Promise<{ x: number, y: number } | null>;
+      getScreenInfo: () => Promise<any>;
     };
   }
 }
