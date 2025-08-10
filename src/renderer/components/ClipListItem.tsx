@@ -1,5 +1,6 @@
 import { Copy, Star, MoreVertical, Edit, Trash2, Keyboard } from 'lucide-react';
 import { useState } from 'react';
+import Tooltip from './Tooltip';
 
 type Props = {
   content: string;
@@ -49,7 +50,9 @@ const ClipListItem = ({
       )}
       
       <div className="flex justify-between items-center">
-        <span className="truncate">{content}</span>
+        <Tooltip content={content} maxLength={40} className="flex-1 min-w-0">
+          <span className="truncate block">{content}</span>
+        </Tooltip>
         <div className="flex gap-2 ml-2 shrink-0">
           <button 
             title="コピー"
