@@ -7,6 +7,7 @@ type Clip = {
   isFavorite?: boolean;
   isSnippet?: boolean;
   shortcutKey?: string;
+  snippetName?: string;
   isEnabled?: boolean;
 };
 
@@ -21,9 +22,10 @@ type Props = {
   onToggleSnippetEnabled?: (id: number) => void;
   onCreateNewSnippet?: () => void;
   onCopy?: (content: string) => void;
+  onCreateSnippetWithContent?: (content: string) => void;
 };
 
-const ClipList = ({ clips, currentTab, search, onToggleFavorite, onToggleSnippet, onEditSnippet, onDeleteSnippet, onToggleSnippetEnabled, onCreateNewSnippet, onCopy }: Props) => {
+const ClipList = ({ clips, currentTab, search, onToggleFavorite, onToggleSnippet, onEditSnippet, onDeleteSnippet, onToggleSnippetEnabled, onCreateNewSnippet, onCopy, onCreateSnippetWithContent }: Props) => {
   const filtered = clips
     .filter((clip) => {
       if (currentTab === 'favorites') return clip.isFavorite;
@@ -60,13 +62,16 @@ const ClipList = ({ clips, currentTab, search, onToggleFavorite, onToggleSnippet
               isFavorite={!!clip.isFavorite}
               isSnippet={!!clip.isSnippet}
               shortcutKey={clip.shortcutKey}
+              snippetName={clip.snippetName}
               isEnabled={clip.isEnabled}
+              currentTab={currentTab}
               onToggleFavorite={() => onToggleFavorite(clip.id)}
               onToggleSnippet={onToggleSnippet ? () => onToggleSnippet(clip.id) : undefined}
               onEditSnippet={onEditSnippet ? () => onEditSnippet(clip.id) : undefined}
               onDeleteSnippet={onDeleteSnippet ? () => onDeleteSnippet(clip.id) : undefined}
               onToggleSnippetEnabled={onToggleSnippetEnabled ? () => onToggleSnippetEnabled(clip.id) : undefined}
               onCopy={onCopy}
+              onCreateSnippetWithContent={onCreateSnippetWithContent}
             />
           ))
         )}

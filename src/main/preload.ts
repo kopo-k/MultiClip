@@ -11,14 +11,24 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.removeAllListeners('snippet-fallback');
     ipcRenderer.on('snippet-fallback', (event, data) => callback(data));
   },
+  onShortcutConflictWarning: (callback: (data: { shortcut: string; conflicts: Array<{ type: string; description: string; appName?: string }> }) => void) => {
+    ipcRenderer.removeAllListeners('shortcut-conflict-warning');
+    ipcRenderer.on('shortcut-conflict-warning', (event, data) => callback(data));
+  },
+  onSnippetRegistrationFailed: (callback: (data: { shortcut: string; reason: string }) => void) => {
+    ipcRenderer.removeAllListeners('snippet-registration-failed');
+    ipcRenderer.on('snippet-registration-failed', (event, data) => callback(data));
+  },
   registerSnippetShortcut: (shortcutKey: string, content: string) => 
     ipcRenderer.invoke('register-snippet-shortcut', shortcutKey, content),
   unregisterSnippetShortcut: (shortcutKey: string) => 
     ipcRenderer.invoke('unregister-snippet-shortcut', shortcutKey),
   updateSnippetShortcuts: (snippets: Array<{ shortcutKey: string; content: string; isEnabled: boolean }>) =>
     ipcRenderer.invoke('update-snippet-shortcuts', snippets),
-  createSnippet: (content: string, shortcutKey: string) =>
-    ipcRenderer.invoke('create-snippet', content, shortcutKey),
+  checkShortcutConflicts: (shortcut: string) => 
+    ipcRenderer.invoke('check-shortcut-conflicts', shortcut),
+  createSnippet: (content: string, shortcutKey: string, snippetName?: string) =>
+    ipcRenderer.invoke('create-snippet', content, shortcutKey, snippetName),
   updateClip: (id: number, updates: any) =>
     ipcRenderer.invoke('update-clip', id, updates),
   copyToClipboard: (text: string) =>

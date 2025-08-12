@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import { registerHotKey, unregisterHotKey, registerSnippetShortcut, unregisterSnippetShortcut, updateSnippetShortcuts, changeGlobalShortcut } from './hotkey';
+import { checkAllShortcutConflicts } from './shortcutConflictDetector';
 import { startClipboardWatcher } from './clipboard';
 import { createTray } from './tray';
 import { setDockIcon } from './dock';
@@ -56,10 +57,21 @@ const createMainWindow = () => {
     return true;
   });
 
-  // IPC - スニペット作成
-  ipcMain.handle('create-snippet', async (event, content: string, shortcutKey: string) => {
+  // IPC - ショートカットキー競合チェック
+  ipcMain.handle('check-shortcut-conflicts', async (event, shortcut: string) => {
     try {
-      addSnippet(content, shortcutKey);
+      const conflicts = await checkAllShortcutConflicts(shortcut);
+      return conflicts;
+    } catch (error) {
+      console.error('Failed to check shortcut conflicts:', error);
+      return [];
+    }
+  });
+
+  // IPC - スニペット作成
+  ipcMain.handle('create-snippet', async (event, content: string, shortcutKey: string, snippetName?: string) => {
+    try {
+      addSnippet(content, shortcutKey, snippetName);
       return true;
     } catch (error) {
       console.error('Failed to create snippet:', error);

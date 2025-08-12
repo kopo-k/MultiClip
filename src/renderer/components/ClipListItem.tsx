@@ -7,13 +7,16 @@ type Props = {
   isFavorite: boolean;
   isSnippet?: boolean;
   shortcutKey?: string;
+  snippetName?: string;
   isEnabled?: boolean;
+  currentTab?: 'history' | 'favorites' | 'snippets';
   onToggleFavorite: () => void;
   onToggleSnippet?: () => void;
   onEditSnippet?: () => void;
   onDeleteSnippet?: () => void;
   onToggleSnippetEnabled?: () => void;
   onCopy?: (content: string) => void;
+  onCreateSnippetWithContent?: (content: string) => void;
 };
 
 const ClipListItem = ({ 
@@ -21,31 +24,45 @@ const ClipListItem = ({
   isFavorite, 
   isSnippet, 
   shortcutKey, 
-  isEnabled, 
+  snippetName,
+  isEnabled,
+  currentTab,
   onToggleFavorite, 
   onToggleSnippet, 
   onEditSnippet, 
   onDeleteSnippet, 
   onToggleSnippetEnabled,
-  onCopy
+  onCopy,
+  onCreateSnippetWithContent
 }: Props) => {
   const [showMenu, setShowMenu] = useState(false);
   return (
     <li className={`border rounded-lg p-3 text-sm flex flex-col no-drag relative ${
-      isSnippet ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
+      isSnippet && currentTab === 'snippets' ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
     }`}>
-      {/* スニペットの場合、ショートカットキーを表示 */}
-      {isSnippet && shortcutKey && (
+      {/* スニペットタブの場合のみ、スニペット名とショートカットキーを表示 */}
+      {isSnippet && shortcutKey && currentTab === 'snippets' && (
         <div className="flex justify-between items-center mb-2">
-          <span className="text-xs text-blue-600 font-mono">{shortcutKey}</span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {snippetName && (
+              <span className="text-xs text-blue-800 bg-blue-100 px-2 py-1 rounded-md font-medium">
+                {snippetName}
+              </span>
+            )}
+            <span className="text-xs text-blue-600 font-mono">{shortcutKey}</span>
+          </div>
+          <button
+            onClick={() => onToggleSnippetEnabled?.()}
+            className="flex items-center gap-1 hover:bg-blue-200 px-2 py-1 rounded-md transition-colors"
+            title="有効/無効を切り替え"
+          >
             <span className={`w-3 h-3 rounded-full ${
               isEnabled !== false ? 'bg-green-500' : 'bg-gray-400'
             }`}></span>
             <span className="text-xs text-gray-500">
               {isEnabled !== false ? '有効' : '無効'}
             </span>
-          </div>
+          </button>
         </div>
       )}
       
@@ -84,7 +101,7 @@ const ClipListItem = ({
                 {!isSnippet ? (
                   <button
                     onClick={() => {
-                      onToggleSnippet?.();
+                      onCreateSnippetWithContent?.(content);
                       setShowMenu(false);
                     }}
                     className="w-full text-left px-3 py-1 hover:bg-gray-100 flex items-center gap-2"

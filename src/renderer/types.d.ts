@@ -10,14 +10,20 @@ declare global {
       onClipAdded: (callback: () => void) => void;
       //スニペットフォールバック通知を受け取る
       onSnippetFallback: (callback: (data: { shortcutKey: string; content: string; reason: string }) => void) => void;
+      //ショートカットキー競合警告を受け取る
+      onShortcutConflictWarning: (callback: (data: { shortcut: string; conflicts: Array<{ type: string; description: string; appName?: string }> }) => void) => void;
+      //スニペット登録失敗通知を受け取る
+      onSnippetRegistrationFailed: (callback: (data: { shortcut: string; reason: string }) => void) => void;
       //スニペット用のショートカットを登録
       registerSnippetShortcut: (shortcutKey: string, content: string) => Promise<boolean>;
       //スニペット用のショートカットを解除
       unregisterSnippetShortcut: (shortcutKey: string) => Promise<boolean>;
       //すべてのスニペットショートカットを更新
       updateSnippetShortcuts: (snippets: Array<{ shortcutKey: string; content: string; isEnabled: boolean }>) => Promise<boolean>;
+      //ショートカットキーの競合をチェック
+      checkShortcutConflicts: (shortcut: string) => Promise<Array<{ shortcut: string; conflictType: string; appName?: string; description?: string }>>;
       //新しいスニペットを作成
-      createSnippet: (content: string, shortcutKey: string) => Promise<boolean>;
+      createSnippet: (content: string, shortcutKey: string, snippetName?: string) => Promise<boolean>;
       //クリップを更新
       updateClip: (id: number, updates: any) => Promise<boolean>;
       //クリップボードにテキストをコピー

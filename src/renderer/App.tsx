@@ -11,6 +11,8 @@ import SettingsModal from './components/SettingsModal';
 import ReportModal from './components/ReportModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import Toast from './components/Toast';
+import ShortcutConflictWarning from './components/ShortcutConflictWarning';
+import SnippetRegistrationError from './components/SnippetRegistrationError';
 
 // Clip型を定義
 type Clip = {
@@ -20,6 +22,7 @@ type Clip = {
   isFavorite?: boolean; // お気に入り（オプション）
   isSnippet?: boolean; // スニペット（オプション）
   shortcutKey?: string; // スニペット用ショートカットキー
+  snippetName?: string; // スニペット名
   isEnabled?: boolean; // スニペットの有効/無効状態
 };
 
@@ -36,6 +39,7 @@ const App = () => {
   const [editingSnippetId, setEditingSnippetId] = useState<number | null>(null);
   // スニペット作成モーダル
   const [isSnippetCreateModalOpen, setIsSnippetCreateModalOpen] = useState(false);
+  const [initialSnippetContent, setInitialSnippetContent] = useState('');
   // 設定モーダル
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   // 報告モーダル
@@ -63,6 +67,7 @@ const App = () => {
         isFavorite: item.is_favorite === 1,
         isSnippet: item.is_snippet === 1,
         shortcutKey: item.shortcut_key || undefined,
+        snippetName: item.snippet_name || undefined,
         isEnabled: item.is_enabled !== 0 // デフォルトはtrue
       }));
       setClips(formattedClips);
@@ -252,7 +257,7 @@ const handleToggleSnippetEnabled = async (id: number) => {
 };
 
 // スニペット保存
-const handleSaveSnippet = async (content: string, shortcutKey: string) => {
+const handleSaveSnippet = async (content: string, shortcutKey: string, snippetName: string) => {
   if (editingSnippetId !== null) {
     // UIを更新
     setClips(prev =>
@@ -261,6 +266,7 @@ const handleSaveSnippet = async (content: string, shortcutKey: string) => {
           ...clip, 
           content,
           shortcutKey,
+          snippetName,
           isSnippet: true,
           isEnabled: true
         } : clip 
@@ -272,6 +278,7 @@ const handleSaveSnippet = async (content: string, shortcutKey: string) => {
       await window.api.updateClip(editingSnippetId, {
         content,
         shortcut_key: shortcutKey,
+        snippet_name: snippetName,
         is_snippet: true,
         is_enabled: true
       });
@@ -285,7 +292,7 @@ const handleSaveSnippet = async (content: string, shortcutKey: string) => {
 // 新しいスニペット作成
 const handleCreateSnippet = async (name: string, shortcutKey: string, content: string) => {
   try {
-    const success = await window.api.createSnippet(content, shortcutKey);
+    const success = await window.api.createSnippet(content, shortcutKey, name);
     if (success) {
       // データベースから最新のデータを取得して画面を更新
       fetchAndUpdateClips();
@@ -293,6 +300,12 @@ const handleCreateSnippet = async (name: string, shortcutKey: string, content: s
   } catch (error) {
     console.error('Failed to create snippet:', error);
   }
+};
+
+// コンテンツ付きでスニペット作成モーダルを開く
+const handleCreateSnippetWithContent = (content: string) => {
+  setInitialSnippetContent(content);
+  setIsSnippetCreateModalOpen(true);
 };
 
 // コピー機能
@@ -421,6 +434,7 @@ const handleCopy = async (content: string) => {
           onToggleSnippetEnabled={handleToggleSnippetEnabled}
           onCreateNewSnippet={() => setIsSnippetCreateModalOpen(true)}
           onCopy={handleCopy}
+          onCreateSnippetWithContent={handleCreateSnippetWithContent}
         />
       </div>
       
@@ -442,13 +456,25 @@ const handleCopy = async (content: string) => {
             ? clips.find(clip => clip.id === editingSnippetId)?.shortcutKey || ''
             : ''
         }
+        initialSnippetName={
+          editingSnippetId !== null 
+            ? clips.find(clip => clip.id === editingSnippetId)?.snippetName || ''
+            : ''
+        }
+        existingShortcuts={clips.filter(clip => clip.isSnippet && clip.shortcutKey).map(clip => clip.shortcutKey!)}
+        currentSnippetId={editingSnippetId || undefined}
       />
       
       {/* スニペット作成モーダル */}
       <SnippetCreateModal
         isOpen={isSnippetCreateModalOpen}
-        onClose={() => setIsSnippetCreateModalOpen(false)}
+        onClose={() => {
+          setIsSnippetCreateModalOpen(false);
+          setInitialSnippetContent('');
+        }}
         onCreate={handleCreateSnippet}
+        existingShortcuts={clips.filter(clip => clip.isSnippet && clip.shortcutKey).map(clip => clip.shortcutKey!)}
+        initialContent={initialSnippetContent}
       />
       
       {/* 設定モーダル */}
@@ -469,6 +495,12 @@ const handleCopy = async (content: string) => {
         isVisible={showToast}
         onHide={() => setShowToast(false)}
       />
+      
+      {/* ショートカットキー競合警告 */}
+      <ShortcutConflictWarning />
+      
+      {/* スニペット登録失敗通知 */}
+      <SnippetRegistrationError />
       </div>
     </ErrorBoundary>
   );

@@ -49,6 +49,12 @@ try {
   // カラムが既に存在する場合はエラーを無視
 }
 
+try {
+  db.prepare(`ALTER TABLE clips ADD COLUMN snippet_name TEXT`).run();
+} catch (e) {
+  // カラムが既に存在する場合はエラーを無視
+}
+
 // 最大保存件数（動的に変更可能）
 let MAX_HISTORY_CLIPS = 50; // 履歴の上限
 let MAX_FAVORITE_CLIPS = 100; // お気に入りの上限
@@ -76,9 +82,9 @@ export function addClip(content: string) {
 /**
  * 新しいスニペットを作成（created_atを過去の日時に設定して履歴に混在させない）
  */
-export function addSnippet(content: string, shortcutKey: string) {
+export function addSnippet(content: string, shortcutKey: string, snippetName?: string) {
   // スニペットは履歴に混在しないよう、作成日時を1970年に設定
-  db.prepare(`INSERT INTO clips (content, is_snippet, shortcut_key, is_enabled, created_at) VALUES (?, 1, ?, 1, '1970-01-01 00:00:00')`).run(content, shortcutKey);
+  db.prepare(`INSERT INTO clips (content, is_snippet, shortcut_key, snippet_name, is_enabled, created_at) VALUES (?, 1, ?, ?, 1, '1970-01-01 00:00:00')`).run(content, shortcutKey, snippetName || null);
 }
 
 /**
@@ -89,6 +95,7 @@ export function updateClip(id: number, updates: {
   is_favorite?: boolean,
   is_snippet?: boolean,
   shortcut_key?: string,
+  snippet_name?: string,
   is_enabled?: boolean
 }) {
   const fields = [];
@@ -120,6 +127,10 @@ export function updateClip(id: number, updates: {
   if (updates.shortcut_key !== undefined) {
     fields.push('shortcut_key = ?');
     values.push(updates.shortcut_key);
+  }
+  if (updates.snippet_name !== undefined) {
+    fields.push('snippet_name = ?');
+    values.push(updates.snippet_name);
   }
   if (updates.is_enabled !== undefined) {
     fields.push('is_enabled = ?');
@@ -158,6 +169,7 @@ export function getRecentClips(limit = 50): {
   is_favorite: number,
   is_snippet: number,
   shortcut_key: string | null,
+  snippet_name: string | null,
   is_enabled: number
 }[] {
   return db.prepare(`SELECT * FROM clips ORDER BY created_at DESC LIMIT ?`).all(limit) as { 
@@ -167,6 +179,7 @@ export function getRecentClips(limit = 50): {
     is_favorite: number,
     is_snippet: number,
     shortcut_key: string | null,
+    snippet_name: string | null,
     is_enabled: number
   }[];
 }
@@ -181,6 +194,7 @@ export function getClipboardHistory(limit = 50): {
   is_favorite: number,
   is_snippet: number,
   shortcut_key: string | null,
+  snippet_name: string | null,
   is_enabled: number
 }[] {
   return db.prepare(`SELECT * FROM clips WHERE (is_snippet IS NULL OR is_snippet = 0) ORDER BY created_at DESC LIMIT ?`).all(limit) as { 
@@ -190,6 +204,7 @@ export function getClipboardHistory(limit = 50): {
     is_favorite: number,
     is_snippet: number,
     shortcut_key: string | null,
+    snippet_name: string | null,
     is_enabled: number
   }[];
 }
@@ -204,6 +219,7 @@ export function getSnippets(): {
   is_favorite: number,
   is_snippet: number,
   shortcut_key: string | null,
+  snippet_name: string | null,
   is_enabled: number
 }[] {
   return db.prepare(`SELECT * FROM clips WHERE is_snippet = 1 ORDER BY created_at DESC`).all() as { 
@@ -213,6 +229,7 @@ export function getSnippets(): {
     is_favorite: number,
     is_snippet: number,
     shortcut_key: string | null,
+    snippet_name: string | null,
     is_enabled: number
   }[];
 }

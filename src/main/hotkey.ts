@@ -1,6 +1,7 @@
 import { globalShortcut, BrowserWindow, app, clipboard } from 'electron';
 import { isQuitting } from './index';
 import { typeText } from './textTyper';
+import { checkAllShortcutConflicts } from './shortcutConflictDetector';
 
 let hotkeyReady = false;
 let snippetShortcuts = new Map<string, string>(); // shortcutKey -> content
@@ -59,9 +60,25 @@ export const registerSnippetShortcut = (shortcutKey: string, content: string): b
   }
 
   try {
-    const success = globalShortcut.register(shortcutKey, () => {
+    const success = globalShortcut.register(shortcutKey, async () => {
       if (!isQuitting) {
         console.log(`Snippet shortcut triggered: ${shortcutKey}`);
+        
+        // ショートカットキー競合チェック
+        const conflicts = await checkAllShortcutConflicts(shortcutKey);
+        if (conflicts.length > 0) {
+          // 競合が検出された場合、ユーザーに通知
+          if (currentWindow && !currentWindow.isDestroyed()) {
+            currentWindow.webContents.send('shortcut-conflict-warning', {
+              shortcut: shortcutKey,
+              conflicts: conflicts.map(c => ({
+                type: c.conflictType,
+                description: c.description,
+                appName: c.appName
+              }))
+            });
+          }
+        }
         
         // テキストを直接入力
         typeText(content, process.platform === 'darwin' ? 300 : 200).then((success) => {
@@ -104,6 +121,14 @@ export const registerSnippetShortcut = (shortcutKey: string, content: string): b
       console.log(`✅ Snippet shortcut registered: ${shortcutKey}`);
     } else {
       console.error(`❌ Failed to register snippet shortcut: ${shortcutKey} (already in use or invalid)`);
+      
+      // ユーザーに登録失敗を通知
+      if (currentWindow && !currentWindow.isDestroyed()) {
+        currentWindow.webContents.send('snippet-registration-failed', {
+          shortcut: shortcutKey,
+          reason: 'このショートカットキーは既に使用されているか無効です'
+        });
+      }
     }
 
     return success;
