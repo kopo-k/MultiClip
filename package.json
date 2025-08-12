@@ -15,7 +15,9 @@
     "dist": "npm run build && electron-builder",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",
-    "release": "npm run build && electron-builder --mac --win --publish=always"
+    "release": "npm run build && electron-builder --mac --win --publish=always",
+    "release:local": "npm run build && npm run dist",
+    "release:manual": "npm run release:local && echo 'Files ready in release/ folder. Upload manually to GitHub.'"
   },
   "build": {
     "appId": "com.multiclip.app",
@@ -50,7 +52,8 @@
       "public/**/*",
       "!node_modules/**/*",
       "node_modules/better-sqlite3/**/*"
-    ]
+    ],
+    "compression": "maximum"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
