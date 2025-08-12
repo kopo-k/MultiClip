@@ -2,7 +2,7 @@
   "name": "multiclip",
   "version": "1.0.0",
   "description": "macOS用クリップボード履歴管理アプリ",
-  "author": "Your Name",
+  "author": "kopo-k",
   "license": "MIT",
   "main": "dist/main/index.js",
   "scripts": {
@@ -12,18 +12,46 @@
     "build": "tsc && cp -R public dist/public && npm run vite:build",
     "rebuild": "electron-rebuild",
     "dev": "tsc --watch",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "release": "npm run build && electron-builder --publish=always"
   },
   "build": {
     "appId": "com.multiclip.app",
     "productName": "MultiClip",
+    "directories": {
+      "output": "release"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "kopo-k",
+      "repo": "MultiClip"
+    },
     "mac": {
-      "target": "dmg",
-      "icon": "public/icon.icns"
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "public/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "public/icon.png"
     },
     "files": [
       "dist/**/*",
-      "public/**/*"
+      "public/**/*",
+      "!node_modules/**/*",
+      "node_modules/better-sqlite3/**/*"
     ]
   },
   "devDependencies": {
