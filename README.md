@@ -46,7 +46,7 @@
 
 ## インストール
 
-[Releases](https://github.com/YOUR_USERNAME/MultiClip/releases)から最新版をダウンロードしてください。
+[Releases](https://github.com/kopo-k/MultiClip/releases)から最新版をダウンロードしてください。
 
 ### macOS
 - `MultiClip-x.x.x.dmg` をダウンロード
