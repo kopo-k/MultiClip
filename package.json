@@ -1,6 +1,6 @@
 {
   "name": "multiclip",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "macOS用クリップボード履歴管理アプリ",
   "author": "kopo-k",
   "license": "MIT",
@@ -33,7 +33,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "public/icon.icns",
