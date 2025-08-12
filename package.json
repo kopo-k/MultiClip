@@ -15,8 +15,7 @@
     "dist": "npm run build && electron-builder",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",
-    "dist:linux": "npm run build && electron-builder --linux",
-    "release": "npm run build && electron-builder --publish=always"
+    "release": "npm run build && electron-builder --mac --win --publish=always"
   },
   "build": {
     "appId": "com.multiclip.app",
@@ -45,10 +44,6 @@
     "win": {
       "target": "nsis",
       "icon": "public/icon.ico"
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": "public/icon.png"
     },
     "files": [
       "dist/**/*",
