@@ -58,6 +58,7 @@ try {
 // 最大保存件数（動的に変更可能）
 let MAX_HISTORY_CLIPS = 50; // 履歴の上限
 let MAX_FAVORITE_CLIPS = 100; // お気に入りの上限
+const MAX_SNIPPET_CLIPS = 10; // スニペットの上限
 
 /**
  * クリップボード履歴に追加（最大件数を超えたら古いデータを削除）
@@ -82,9 +83,16 @@ export function addClip(content: string) {
 /**
  * 新しいスニペットを作成（created_atを過去の日時に設定して履歴に混在させない）
  */
-export function addSnippet(content: string, shortcutKey: string, snippetName?: string) {
+export function addSnippet(content: string, shortcutKey: string, snippetName?: string): boolean {
+  // スニペット数の上限チェック
+  const count = db.prepare(`SELECT COUNT(*) AS cnt FROM clips WHERE is_snippet = 1`).get() as { cnt: number };
+  if (count.cnt >= MAX_SNIPPET_CLIPS) {
+    return false; // 上限に達している場合は作成しない
+  }
+  
   // スニペットは履歴に混在しないよう、作成日時を1970年に設定
   db.prepare(`INSERT INTO clips (content, is_snippet, shortcut_key, snippet_name, is_enabled, created_at) VALUES (?, 1, ?, ?, 1, '1970-01-01 00:00:00')`).run(content, shortcutKey, snippetName || null);
+  return true;
 }
 
 /**
@@ -97,7 +105,7 @@ export function updateClip(id: number, updates: {
   shortcut_key?: string,
   snippet_name?: string,
   is_enabled?: boolean
-}) {
+}): boolean {
   const fields = [];
   const values = [];
   
@@ -115,6 +123,14 @@ export function updateClip(id: number, updates: {
     }
   }
   if (updates.is_snippet !== undefined) {
+    // スニペット化する場合、上限チェック
+    if (updates.is_snippet) {
+      const count = db.prepare(`SELECT COUNT(*) AS cnt FROM clips WHERE is_snippet = 1 AND id != ?`).get(id) as { cnt: number };
+      if (count.cnt >= MAX_SNIPPET_CLIPS) {
+        return false; // 上限に達している場合は更新しない
+      }
+    }
+    
     fields.push('is_snippet = ?');
     values.push(updates.is_snippet ? 1 : 0);
     
@@ -141,6 +157,7 @@ export function updateClip(id: number, updates: {
     values.push(id);
     db.prepare(`UPDATE clips SET ${fields.join(', ')} WHERE id = ?`).run(...values);
   }
+  return true;
 }
 
 /**

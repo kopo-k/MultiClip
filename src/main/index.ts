@@ -71,8 +71,8 @@ const createMainWindow = () => {
   // IPC - スニペット作成
   ipcMain.handle('create-snippet', async (event, content: string, shortcutKey: string, snippetName?: string) => {
     try {
-      addSnippet(content, shortcutKey, snippetName);
-      return true;
+      const success = addSnippet(content, shortcutKey, snippetName);
+      return success;
     } catch (error) {
       console.error('Failed to create snippet:', error);
       return false;
@@ -82,8 +82,8 @@ const createMainWindow = () => {
   // IPC - クリップ更新
   ipcMain.handle('update-clip', async (event, id: number, updates: any) => {
     try {
-      updateClip(id, updates);
-      return true;
+      const success = updateClip(id, updates);
+      return success;
     } catch (error) {
       console.error('Failed to update clip:', error);
       return false;

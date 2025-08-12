@@ -32,6 +32,7 @@ const TabBar = ({
       <TabButton
         label="スニペット"
         count={snippetsCount}
+        maxCount={10}
         active={currentTab === 'snippets'}
         onClick={() => onTabChange('snippets')}
       />

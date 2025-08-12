@@ -175,23 +175,38 @@ const handleToggleSnippet = async (id: number) => {
   const clip = clips.find(c => c.id === id);
   if (!clip) return;
 
-  // UIを更新
-  setClips(prev =>
-    prev.map(clip =>
-      clip.id === id ? { 
-        ...clip, 
-        isSnippet: !clip.isSnippet,
-        isEnabled: clip.isSnippet ? undefined : true // スニペット化する時は有効にする
-      } : clip 
-    )
-  );
+  // スニペット化する場合、上限チェック
+  if (!clip.isSnippet) {
+    const currentSnippets = clips.filter(c => c.isSnippet).length;
+    if (currentSnippets >= 10) {
+      setToastMessage('スニペットは10個まで登録可能です');
+      setShowToast(true);
+      return;
+    }
+  }
 
   // データベースにも変更を保存
   try {
-    await window.api.updateClip(id, {
+    const success = await window.api.updateClip(id, {
       is_snippet: !clip.isSnippet,
       is_enabled: clip.isSnippet ? undefined : true
     });
+
+    if (success) {
+      // UIを更新
+      setClips(prev =>
+        prev.map(clip =>
+          clip.id === id ? { 
+            ...clip, 
+            isSnippet: !clip.isSnippet,
+            isEnabled: clip.isSnippet ? undefined : true // スニペット化する時は有効にする
+          } : clip 
+        )
+      );
+    } else {
+      setToastMessage('スニペットは10個まで登録可能です');
+      setShowToast(true);
+    }
   } catch (error) {
     console.error('Failed to update snippet status:', error);
   }
@@ -292,10 +307,21 @@ const handleSaveSnippet = async (content: string, shortcutKey: string, snippetNa
 // 新しいスニペット作成
 const handleCreateSnippet = async (name: string, shortcutKey: string, content: string) => {
   try {
+    // 上限チェック
+    const currentSnippets = clips.filter(c => c.isSnippet).length;
+    if (currentSnippets >= 10) {
+      setToastMessage('スニペットは10個まで登録可能です');
+      setShowToast(true);
+      return;
+    }
+
     const success = await window.api.createSnippet(content, shortcutKey, name);
     if (success) {
       // データベースから最新のデータを取得して画面を更新
       fetchAndUpdateClips();
+    } else {
+      setToastMessage('スニペットは10個まで登録可能です');
+      setShowToast(true);
     }
   } catch (error) {
     console.error('Failed to create snippet:', error);
@@ -304,6 +330,14 @@ const handleCreateSnippet = async (name: string, shortcutKey: string, content: s
 
 // コンテンツ付きでスニペット作成モーダルを開く
 const handleCreateSnippetWithContent = (content: string) => {
+  // 上限チェック
+  const currentSnippets = clips.filter(c => c.isSnippet).length;
+  if (currentSnippets >= 10) {
+    setToastMessage('スニペットは10個まで登録可能です');
+    setShowToast(true);
+    return;
+  }
+
   setInitialSnippetContent(content);
   setIsSnippetCreateModalOpen(true);
 };
@@ -432,7 +466,15 @@ const handleCopy = async (content: string) => {
           onEditSnippet={handleEditSnippet}
           onDeleteSnippet={handleDeleteSnippet}
           onToggleSnippetEnabled={handleToggleSnippetEnabled}
-          onCreateNewSnippet={() => setIsSnippetCreateModalOpen(true)}
+          onCreateNewSnippet={() => {
+            const currentSnippets = clips.filter(c => c.isSnippet).length;
+            if (currentSnippets >= 10) {
+              setToastMessage('スニペットは10個まで登録可能です');
+              setShowToast(true);
+              return;
+            }
+            setIsSnippetCreateModalOpen(true);
+          }}
           onCopy={handleCopy}
           onCreateSnippetWithContent={handleCreateSnippetWithContent}
         />
