@@ -9,7 +9,8 @@
     "vite": "vite",
     "vite:build": "vite build",
     "start": "npm run build && electron .",
-    "build": "tsc && cp -R public dist/public && npm run vite:build",
+    "build": "tsc && cp -R public dist/public && npm run vite:build && npm run clean:data",
+    "clean:data": "rm -rf data/clipboard.db || true",
     "rebuild": "electron-rebuild",
     "dev": "tsc --watch",
     "dist": "npm run build && electron-builder",
@@ -51,6 +52,7 @@
       "dist/**/*",
       "public/**/*",
       "!node_modules/**/*",
+      "!data/**/*",
       "node_modules/better-sqlite3/**/*",
       "node_modules/bindings/**/*",
       "node_modules/file-uri-to-path/**/*"

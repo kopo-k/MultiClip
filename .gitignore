@@ -112,6 +112,7 @@ release/
 *.db
 *.sqlite
 *.sqlite3
+data/
 
 # Temporary files
 tmp/
