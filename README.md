@@ -55,11 +55,6 @@
 ### Windows
 - `MultiClip Setup x.x.x.exe` をダウンロードして実行
 
-### Linux
-- `MultiClip-x.x.x.AppImage` をダウンロード
-- 実行権限を付与: `chmod +x MultiClip-x.x.x.AppImage`
-- 実行: `./MultiClip-x.x.x.AppImage`
-
 ## 🎯 主な機能
 
 | 機能            | 説明 |
