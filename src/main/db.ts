@@ -55,6 +55,12 @@ try {
   // カラムが既に存在する場合はエラーを無視
 }
 
+try {
+  db.prepare(`ALTER TABLE clips ADD COLUMN is_history_hidden INTEGER DEFAULT 0`).run();
+} catch (e) {
+  // カラムが既に存在する場合はエラーを無視
+}
+
 // 最大保存件数（動的に変更可能）
 let MAX_HISTORY_CLIPS = 50; // 履歴の上限
 let MAX_FAVORITE_CLIPS = 100; // お気に入りの上限
@@ -64,6 +70,27 @@ const MAX_SNIPPET_CLIPS = 10; // スニペットの上限
  * クリップボード履歴に追加（最大件数を超えたら古いデータを削除）
  */
 export function addClip(content: string) {
+  // 空のコンテンツやスペースのみの場合はスキップ
+  if (!content || content.trim().length === 0) {
+    console.log('Skipping empty content');
+    return;
+  }
+  
+  // 重複チェック：最新の履歴と同じ内容なら追加しない
+  const lastClip = db.prepare(`
+    SELECT content FROM clips 
+    WHERE (is_snippet IS NULL OR is_snippet = 0) 
+    ORDER BY created_at DESC 
+    LIMIT 1
+  `).get() as { content: string } | undefined;
+  
+  if (lastClip && lastClip.content === content) {
+    console.log('Skipping duplicate content:', content.substring(0, 50) + '...');
+    return;
+  }
+  
+  console.log('Adding new clip to database:', content.substring(0, 50) + '...');
+  
   // 追加
   db.prepare(`INSERT INTO clips (content) VALUES (?)`).run(content);
 
@@ -84,15 +111,28 @@ export function addClip(content: string) {
  * 新しいスニペットを作成（created_atを過去の日時に設定して履歴に混在させない）
  */
 export function addSnippet(content: string, shortcutKey: string, snippetName?: string): boolean {
+  console.log('addSnippet called with:', { content, shortcutKey, snippetName });
+  
   // スニペット数の上限チェック
   const count = db.prepare(`SELECT COUNT(*) AS cnt FROM clips WHERE is_snippet = 1`).get() as { cnt: number };
+  console.log('Current snippet count in DB:', count.cnt);
+  
   if (count.cnt >= MAX_SNIPPET_CLIPS) {
+    console.log('Snippet limit reached, cannot create');
     return false; // 上限に達している場合は作成しない
   }
   
-  // スニペットは履歴に混在しないよう、作成日時を1970年に設定
-  db.prepare(`INSERT INTO clips (content, is_snippet, shortcut_key, snippet_name, is_enabled, created_at) VALUES (?, 1, ?, ?, 1, '1970-01-01 00:00:00')`).run(content, shortcutKey, snippetName || null);
-  return true;
+  try {
+    // スニペットは履歴に混在しないよう、作成日時を1970年に設定
+    const stmt = db.prepare(`INSERT INTO clips (content, is_snippet, shortcut_key, snippet_name, is_enabled, created_at) VALUES (?, 1, ?, ?, 1, '1970-01-01 00:00:00')`);
+    const result = stmt.run(content, shortcutKey, snippetName || null);
+    console.log('Insert result:', result);
+    console.log('Snippet created successfully');
+    return true;
+  } catch (error) {
+    console.error('Error inserting snippet:', error);
+    return false;
+  }
 }
 
 /**
@@ -189,7 +229,16 @@ export function getRecentClips(limit = 50): {
   snippet_name: string | null,
   is_enabled: number
 }[] {
-  return db.prepare(`SELECT * FROM clips ORDER BY created_at DESC LIMIT ?`).all(limit) as { 
+  // スニペットを優先して取得し、その後履歴を取得
+  const snippets = db.prepare(`SELECT * FROM clips WHERE is_snippet = 1 ORDER BY id DESC`).all();
+  const historyLimit = Math.max(0, limit - snippets.length);
+  const history = db.prepare(`
+    SELECT * FROM clips 
+    WHERE (is_snippet IS NULL OR is_snippet = 0) 
+    ORDER BY created_at DESC LIMIT ?
+  `).all(historyLimit);
+  
+  const result = [...snippets, ...history] as { 
     id: number, 
     content: string, 
     created_at: string,
@@ -197,8 +246,14 @@ export function getRecentClips(limit = 50): {
     is_snippet: number,
     shortcut_key: string | null,
     snippet_name: string | null,
-    is_enabled: number
+    is_enabled: number,
+    is_history_hidden: number
   }[];
+  
+  console.log('getRecentClips result:', result.length, 'items');
+  console.log('Snippets in result:', result.filter(r => r.is_snippet === 1).length);
+  
+  return result;
 }
 
 /**
@@ -252,10 +307,49 @@ export function getSnippets(): {
 }
 
 /**
- * 全履歴データを削除（スニペットと お気に入り は保持）
+ * 履歴タブに表示される全データを削除（スニペットのみ保持、お気に入りも削除）
  */
+/**
+ * 特定のアイテムを完全削除
+ */
+export function deleteClip(id: number): boolean {
+  console.log('deleteClip called for id:', id);
+  
+  const result = db.prepare(`DELETE FROM clips WHERE id = ?`).run(id);
+  
+  console.log('Deleted', result.changes, 'clip(s)');
+  return result.changes > 0;
+}
+
+/**
+ * 履歴から隠す（お気に入りは保持）
+ */
+export function hideFromHistory(id: number): boolean {
+  console.log('hideFromHistory called for id:', id);
+  
+  const result = db.prepare(`UPDATE clips SET is_history_hidden = 1 WHERE id = ?`).run(id);
+  
+  console.log('Hidden from history:', result.changes, 'clip(s)');
+  return result.changes > 0;
+}
+
 export function clearAllHistory() {
-  db.prepare(`DELETE FROM clips WHERE (is_snippet IS NULL OR is_snippet = 0) AND (is_favorite IS NULL OR is_favorite = 0)`).run();
+  console.log('clearAllHistory called - clearing history tab');
+  
+  // お気に入りの場合は履歴から隠すだけ、通常のアイテムは完全削除
+  const hideResult = db.prepare(`
+    UPDATE clips SET is_history_hidden = 1 
+    WHERE (is_snippet IS NULL OR is_snippet = 0) AND is_favorite = 1
+  `).run();
+  
+  const deleteResult = db.prepare(`
+    DELETE FROM clips 
+    WHERE (is_snippet IS NULL OR is_snippet = 0) AND (is_favorite IS NULL OR is_favorite = 0)
+  `).run();
+  
+  console.log('Hidden', hideResult.changes, 'favorite items from history');
+  console.log('Deleted', deleteResult.changes, 'non-favorite history items');
+  return hideResult.changes + deleteResult.changes;
 }
 
 /**

@@ -5,7 +5,7 @@ import { checkAllShortcutConflicts } from './shortcutConflictDetector';
 import { startClipboardWatcher } from './clipboard';
 import { createTray } from './tray';
 import { setDockIcon } from './dock';
-import { getRecentClips, addSnippet, updateClip, setHistoryLimit, setFavoriteLimit } from './db';
+import { getRecentClips, addSnippet, updateClip, deleteClip, hideFromHistory, setHistoryLimit, setFavoriteLimit } from './db';
 
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
@@ -16,7 +16,6 @@ const createMainWindow = () => {
   const win = new BrowserWindow({
     width: 500,
     height: 500,
-
     resizable: false,
     fullscreenable: true, // フルスクリーンSpaceでの補助ウィンドウとして許可
     titleBarStyle: 'hiddenInset',
@@ -71,7 +70,9 @@ const createMainWindow = () => {
   // IPC - スニペット作成
   ipcMain.handle('create-snippet', async (event, content: string, shortcutKey: string, snippetName?: string) => {
     try {
+      console.log('IPC create-snippet received:', { content, shortcutKey, snippetName });
       const success = addSnippet(content, shortcutKey, snippetName);
+      console.log('addSnippet result:', success);
       return success;
     } catch (error) {
       console.error('Failed to create snippet:', error);
@@ -86,6 +87,28 @@ const createMainWindow = () => {
       return success;
     } catch (error) {
       console.error('Failed to update clip:', error);
+      return false;
+    }
+  });
+
+  // IPC - クリップ削除
+  ipcMain.handle('delete-clip', async (event, id: number) => {
+    try {
+      const success = deleteClip(id);
+      return success;
+    } catch (error) {
+      console.error('Failed to delete clip:', error);
+      return false;
+    }
+  });
+
+  // IPC - 履歴から隠す
+  ipcMain.handle('hide-from-history', async (event, id: number) => {
+    try {
+      const success = hideFromHistory(id);
+      return success;
+    } catch (error) {
+      console.error('Failed to hide from history:', error);
       return false;
     }
   });

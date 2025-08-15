@@ -1,0 +1,56 @@
+【システム構成】
+
+■ ハードウェア構成
+- 対象プラットフォーム: macOS、Windows
+- メモリ: 最小2GB以上推奨
+- ストレージ: 100MB以上の空き容量
+- CPU: Intel/AMD x64、Apple Silicon対応x
+
+■ ソフトウェアアーキテクチャ
+1. **Main Process (Electron)**
+   - Node.js ランタイム上で動作
+   - システム全体の制御とバックグラウンド処理を担当
+   - ネイティブAPIとの橋渡し役
+
+2. **Renderer Process (React)**
+   - Chromium ベースのWebViewで動作
+   - ユーザーインターフェースを担当
+   - TypeScript + React + Tailwind CSS
+
+3. **データベース層**
+   - SQLite データベース（better-sqlite3）
+   - ローカルファイルベースの軽量DB
+   - クリップボード履歴、お気に入り、スニペットを管理
+
+4. **システム統合層**
+   - robotjs: 自動キー入力とマウス操作
+   - Electron GlobalShortcut: システム全体でのホットキー
+   - システムクリップボードAPI: コピー内容の監視・制御
+
+■ API・ライブラリ連携
+- **Electron Framework**: デスクトップアプリ化
+- **better-sqlite3**: ネイティブSQLiteバインディング
+- **robotjs**: システムレベル自動化
+- **React**: フロントエンドUI框架
+- **Tailwind CSS**: ユーティリティファーストCSS
+- **Lucide React**: アイコンライブラリ
+- **Vite**: 高速ビルドツール
+
+■ セキュリティ・権限
+- macOSアクセシビリティ権限（自動入力のため）
+- サンドボックス外実行（システム統合のため）
+- ローカルデータのみ（外部通信なし）
+
+■ データフロー
+1. システムクリップボード変更検知
+2. Main Process → SQLiteデータベースへ保存
+3. Main Process → Renderer Process（IPC通信）
+4. UI更新・ユーザー操作
+5. グローバルホットキー → ウィンドウ表示
+6. スニペット機能 → 自動テキスト入力
+
+■ ビルド・配布
+- electron-builder: パッケージング
+- GitHub Actions: 自動ビルド・リリース
+- コード署名: 未実装（今後対応予定）
+- インストーラー: .dmg (macOS), .exe (Windows)

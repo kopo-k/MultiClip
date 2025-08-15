@@ -31,6 +31,10 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('create-snippet', content, shortcutKey, snippetName),
   updateClip: (id: number, updates: any) =>
     ipcRenderer.invoke('update-clip', id, updates),
+  deleteClip: (id: number) =>
+    ipcRenderer.invoke('delete-clip', id),
+  hideFromHistory: (id: number) =>
+    ipcRenderer.invoke('hide-from-history', id),
   copyToClipboard: (text: string) =>
     ipcRenderer.invoke('copy-to-clipboard', text),
   // 設定関連API

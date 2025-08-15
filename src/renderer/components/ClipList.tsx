@@ -9,6 +9,7 @@ type Clip = {
   shortcutKey?: string;
   snippetName?: string;
   isEnabled?: boolean;
+  isHistoryHidden?: boolean;
 };
 
 type Props = {
@@ -19,19 +20,20 @@ type Props = {
   onToggleSnippet?: (id: number) => void;
   onEditSnippet?: (id: number) => void;
   onDeleteSnippet?: (id: number) => void;
+  onDeleteHistoryItem?: (id: number) => void;
   onToggleSnippetEnabled?: (id: number) => void;
   onCreateNewSnippet?: () => void;
   onCopy?: (content: string) => void;
   onCreateSnippetWithContent?: (content: string) => void;
 };
 
-const ClipList = ({ clips, currentTab, search, onToggleFavorite, onToggleSnippet, onEditSnippet, onDeleteSnippet, onToggleSnippetEnabled, onCreateNewSnippet, onCopy, onCreateSnippetWithContent }: Props) => {
+const ClipList = ({ clips, currentTab, search, onToggleFavorite, onToggleSnippet, onEditSnippet, onDeleteSnippet, onDeleteHistoryItem, onToggleSnippetEnabled, onCreateNewSnippet, onCopy, onCreateSnippetWithContent }: Props) => {
   const filtered = clips
     .filter((clip) => {
       if (currentTab === 'favorites') return clip.isFavorite;
       if (currentTab === 'snippets') return clip.isSnippet;
-      // 履歴タブではスニペットを除外
-      if (currentTab === 'history') return !clip.isSnippet;
+      // 履歴タブではスニペットを除外し、履歴から隠されたアイテムも除外
+      if (currentTab === 'history') return !clip.isSnippet && !clip.isHistoryHidden;
       return true;
     })
     .filter((clip) => clip.content.toLowerCase().includes(search.toLowerCase()));
@@ -69,6 +71,7 @@ const ClipList = ({ clips, currentTab, search, onToggleFavorite, onToggleSnippet
               onToggleSnippet={onToggleSnippet ? () => onToggleSnippet(clip.id) : undefined}
               onEditSnippet={onEditSnippet ? () => onEditSnippet(clip.id) : undefined}
               onDeleteSnippet={onDeleteSnippet ? () => onDeleteSnippet(clip.id) : undefined}
+              onDeleteHistoryItem={onDeleteHistoryItem ? () => onDeleteHistoryItem(clip.id) : undefined}
               onToggleSnippetEnabled={onToggleSnippetEnabled ? () => onToggleSnippetEnabled(clip.id) : undefined}
               onCopy={onCopy}
               onCreateSnippetWithContent={onCreateSnippetWithContent}

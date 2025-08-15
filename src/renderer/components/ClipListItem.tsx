@@ -14,6 +14,7 @@ type Props = {
   onToggleSnippet?: () => void;
   onEditSnippet?: () => void;
   onDeleteSnippet?: () => void;
+  onDeleteHistoryItem?: () => void;
   onToggleSnippetEnabled?: () => void;
   onCopy?: (content: string) => void;
   onCreateSnippetWithContent?: (content: string) => void;
@@ -31,6 +32,7 @@ const ClipListItem = ({
   onToggleSnippet, 
   onEditSnippet, 
   onDeleteSnippet, 
+  onDeleteHistoryItem,
   onToggleSnippetEnabled,
   onCopy,
   onCreateSnippetWithContent
@@ -99,16 +101,30 @@ const ClipListItem = ({
             {showMenu && (
               <div className="absolute right-0 top-6 bg-white border rounded-lg shadow-lg py-2 min-w-[150px] z-10">
                 {!isSnippet ? (
-                  <button
-                    onClick={() => {
-                      onCreateSnippetWithContent?.(content);
-                      setShowMenu(false);
-                    }}
-                    className="w-full text-left px-3 py-1 hover:bg-gray-100 flex items-center gap-2"
-                  >
-                    <Keyboard className="w-4 h-4" />
-                    スニペットに追加
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        onCreateSnippetWithContent?.(content);
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-3 py-1 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <Keyboard className="w-4 h-4" />
+                      スニペットに追加
+                    </button>
+                    {(currentTab === 'history' || currentTab === 'favorites') && (
+                      <button
+                        onClick={() => {
+                          onDeleteHistoryItem?.();
+                          setShowMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-1 hover:bg-red-100 text-red-600 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {currentTab === 'history' && isFavorite ? '履歴から削除' : '削除'}
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <>
                     <button

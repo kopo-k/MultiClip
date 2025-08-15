@@ -5,6 +5,8 @@ import ReportModal from './ReportModal';
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onShortcutChanged?: (newShortcut: string) => void;
+  onDataChanged?: () => void;
 }
 
 interface AppSettings {
@@ -21,7 +23,7 @@ interface AppSettings {
   alwaysOnTop: boolean;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onShortcutChanged, onDataChanged }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'history' | 'hotkey' | 'display' | 'data' | 'info'>('basic');
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
@@ -171,6 +173,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         case 'globalShortcut':
           const electronShortcut = convertShortcutToElectron(value);
           await window.api.changeGlobalShortcut(electronShortcut);
+          // ヘッダーバーの表示を更新
+          onShortcutChanged?.(value);
           break;
         case 'opacity':
           await window.api.updateWindowSettings({ opacity: value });
@@ -224,11 +228,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   };
 
   const clearAllHistory = async () => {
-    if (confirm('履歴をすべて削除しますか？この操作は元に戻せません。（お気に入りとスニペットは保持されます）')) {
+    if (confirm('履歴タブに表示されているアイテムをすべて削除しますか？この操作は元に戻せません。（スニペットのみ保持されます）')) {
       try {
+        console.log('Clearing all history...');
         const success = await window.api.clearAllHistory();
+        console.log('Clear history result:', success);
+        
         if (success) {
-          alert('履歴を削除しました。');
+          alert('履歴タブのアイテムを削除しました。');
+          // データ変更を親コンポーネントに通知
+          onDataChanged?.();
         } else {
           alert('履歴の削除に失敗しました。');
         }
@@ -556,10 +565,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     onClick={clearAllHistory}
                     className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                   >
-                    履歴の一括削除
+                    履歴タブの一括削除
                   </button>
                   <p className="text-sm text-gray-600">
-                    すべての履歴データを削除します。この操作は元に戻せません。
+                    履歴タブに表示されているアイテムを削除します。スニペットは保持されます。
                   </p>
                 </div>
               </div>

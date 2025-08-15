@@ -24,6 +24,7 @@ type Clip = {
   shortcutKey?: string; // スニペット用ショートカットキー
   snippetName?: string; // スニペット名
   isEnabled?: boolean; // スニペットの有効/無効状態
+  isHistoryHidden?: boolean; // 履歴から隠されているかどうか
 };
 
 
@@ -47,6 +48,8 @@ const App = () => {
   // トースト通知
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
+  // グローバルショートカット
+  const [globalShortcut, setGlobalShortcut] = useState<string>('⌘+Shift+C');
 
   // ウィンドウドラッグ機能
   const appRef = useRef<HTMLDivElement>(null);
@@ -56,7 +59,10 @@ const App = () => {
   // データベースからクリップを取得してフォーマット
   const fetchAndUpdateClips = async () => {
     try {
+      console.log('fetchAndUpdateClips called');
       const data = await window.api.getRecentClips();
+      console.log('Data received from getRecentClips:', data);
+      
       if (!data || !Array.isArray(data)) {
         console.error('Invalid data received from getRecentClips');
         return;
@@ -68,10 +74,12 @@ const App = () => {
         isSnippet: item.is_snippet === 1,
         shortcutKey: item.shortcut_key || undefined,
         snippetName: item.snippet_name || undefined,
-        isEnabled: item.is_enabled !== 0 // デフォルトはtrue
+        isEnabled: item.is_enabled !== 0, // デフォルトはtrue
+        isHistoryHidden: item.is_history_hidden === 1
       }));
       setClips(formattedClips);
       console.log('Updated clips:', formattedClips.length, 'total items');
+      console.log('Snippets in clips:', formattedClips.filter(c => c.isSnippet).length);
     } catch (error) {
       console.error('Failed to fetch clips:', error);
       setClips([]); // エラー時は空配列を設定
@@ -81,6 +89,19 @@ const App = () => {
   useEffect(() => {
     // 初回ロード
     fetchAndUpdateClips();
+    
+    // 設定を読み込んでショートカットを設定
+    const loadSettings = async () => {
+      try {
+        const settings = await window.api.loadSettings();
+        if (settings && settings.globalShortcut) {
+          setGlobalShortcut(settings.globalShortcut);
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    };
+    loadSettings();
     
     // クリップが追加されたら履歴を更新
     const handleClipAdded = () => {
@@ -124,7 +145,7 @@ const App = () => {
   );
 
   // 各タブの実際のアイテム数を計算
-  const historyCount = clips.filter(clip => !clip.isSnippet).length; // スニペットを除外
+  const historyCount = clips.filter(clip => !clip.isSnippet && !clip.isHistoryHidden).length; // スニペットと履歴から隠されたアイテムを除外
   const favoritesCount = clips.filter(clip => clip.isFavorite).length;
   const snippetsCount = clips.filter(clip => clip.isSnippet).length;
 
@@ -218,6 +239,36 @@ const handleEditSnippet = (id: number) => {
   setIsSnippetModalOpen(true);
 };
 
+// 履歴アイテム削除（お気に入りの場合は履歴から削除、通常の場合は完全削除）
+const handleDeleteHistoryItem = async (id: number) => {
+  try {
+    const clip = clips.find(c => c.id === id);
+    if (!clip) return;
+
+    if (clip.isFavorite) {
+      // お気に入りに登録されている場合は、履歴から隠すだけで削除しない
+      const success = await window.api.hideFromHistory(id);
+      if (success) {
+        await fetchAndUpdateClips();
+        setToastMessage('履歴から削除しました（お気に入りは保持されます）');
+        setShowToast(true);
+      }
+    } else {
+      // 通常のアイテムは完全削除
+      const success = await window.api.deleteClip(id);
+      if (success) {
+        await fetchAndUpdateClips();
+        setToastMessage('アイテムを削除しました');
+        setShowToast(true);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to delete history item:', error);
+    setToastMessage('削除に失敗しました');
+    setShowToast(true);
+  }
+};
+
 // スニペット削除
 const handleDeleteSnippet = async (id: number) => {
   // UIを更新
@@ -305,22 +356,33 @@ const handleSaveSnippet = async (content: string, shortcutKey: string, snippetNa
 };
 
 // 新しいスニペット作成
-const handleCreateSnippet = async (name: string, shortcutKey: string, content: string) => {
+const handleCreateSnippet = async (content: string, shortcutKey: string, name: string) => {
   try {
+    console.log('handleCreateSnippet called with:', { content, shortcutKey, name });
+    
     // 上限チェック
     const currentSnippets = clips.filter(c => c.isSnippet).length;
+    console.log('Current snippet count:', currentSnippets);
+    
     if (currentSnippets >= 10) {
       setToastMessage('スニペットは10個まで登録可能です');
       setShowToast(true);
       return;
     }
 
+    console.log('Calling window.api.createSnippet...');
     const success = await window.api.createSnippet(content, shortcutKey, name);
+    console.log('createSnippet result:', success);
+    
     if (success) {
+      console.log('Snippet created successfully, updating clips...');
       // データベースから最新のデータを取得して画面を更新
-      fetchAndUpdateClips();
+      await fetchAndUpdateClips();
+      setToastMessage('スニペットを作成しました');
+      setShowToast(true);
     } else {
-      setToastMessage('スニペットは10個まで登録可能です');
+      console.log('Snippet creation failed');
+      setToastMessage('スニペットの作成に失敗しました');
       setShowToast(true);
     }
   } catch (error) {
@@ -442,7 +504,10 @@ const handleCopy = async (content: string) => {
         onMouseUp={handleMouseUp}
       >
       {/* ヘッダー：アプリ名 + ホットキー + 設定アイコン */}
-      <HeaderBar onSettingsClick={() => setIsSettingsModalOpen(true)} />
+      <HeaderBar 
+        onSettingsClick={() => setIsSettingsModalOpen(true)} 
+        globalShortcut={globalShortcut}
+      />
       {/* 検索バー */}
       <div className="select-text">
         <SearchBar search={search} setSearch={setSearch} />
@@ -465,6 +530,7 @@ const handleCopy = async (content: string) => {
           onToggleSnippet={handleToggleSnippet}
           onEditSnippet={handleEditSnippet}
           onDeleteSnippet={handleDeleteSnippet}
+          onDeleteHistoryItem={handleDeleteHistoryItem}
           onToggleSnippetEnabled={handleToggleSnippetEnabled}
           onCreateNewSnippet={() => {
             const currentSnippets = clips.filter(c => c.isSnippet).length;
@@ -523,6 +589,8 @@ const handleCopy = async (content: string) => {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+        onShortcutChanged={(newShortcut) => setGlobalShortcut(newShortcut)}
+        onDataChanged={() => fetchAndUpdateClips()}
       />
       
       {/* 報告モーダル */}

@@ -4,7 +4,7 @@ import { X, Save, AlertTriangle } from 'lucide-react';
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (name: string, shortcutKey: string, content: string) => void;
+  onCreate: (content: string, shortcutKey: string, name: string) => void;
   existingShortcuts: string[];
   initialContent?: string;
 };
@@ -34,7 +34,7 @@ const SnippetCreateModal = ({ isOpen, onClose, onCreate, existingShortcuts, init
         setShortcutError('このショートカットキーは既に使用されています');
         return;
       }
-      onCreate(name.trim(), shortcutKey.trim(), content.trim());
+      onCreate(content.trim(), shortcutKey.trim(), name.trim());
       handleClose();
     }
   };

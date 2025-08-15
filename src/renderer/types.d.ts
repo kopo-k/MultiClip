@@ -26,6 +26,10 @@ declare global {
       createSnippet: (content: string, shortcutKey: string, snippetName?: string) => Promise<boolean>;
       //クリップを更新
       updateClip: (id: number, updates: any) => Promise<boolean>;
+      //クリップを削除
+      deleteClip: (id: number) => Promise<boolean>;
+      //履歴から隠す
+      hideFromHistory: (id: number) => Promise<boolean>;
       //クリップボードにテキストをコピー
       copyToClipboard: (text: string) => Promise<boolean>;
       //設定関連API

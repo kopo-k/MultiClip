@@ -1,0 +1,199 @@
+
+<\!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; padding: 20px; }
+        #svg-container { display: inline-block; }
+    </style>
+</head>
+<body>
+    <div id="svg-container">
+        <?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="rendererGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="systemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="2" flood-opacity="0.3" stdDeviation="3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#F8FAFC"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#1E293B">MultiClip システム構成図</text>
+  
+  <!-- Main Process (Electron Main) -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="100" width="300" height="500" rx="15" fill="url(#mainGrad)" stroke="#1E40AF" stroke-width="2"/>
+    <text x="200" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">Main Process (Electron)</text>
+    
+    <!-- Main Process Components -->
+    <rect x="70" y="150" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)" stroke="rgba(255,255,255,0.5)"/>
+    <text x="200" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E40AF">Window Management</text>
+    <text x="200" y="195" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#1E40AF">・ウィンドウ作成・表示制御</text>
+    
+    <rect x="70" y="220" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="200" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E40AF">Global Hotkey</text>
+    <text x="200" y="265" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#1E40AF">・⌘+Shift+C でウィンドウ表示</text>
+    
+    <rect x="70" y="290" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="200" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E40AF">Clipboard Monitor</text>
+    <text x="200" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#1E40AF">・クリップボード変更を監視</text>
+    
+    <rect x="70" y="360" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="200" y="385" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E40AF">Snippet Engine</text>
+    <text x="200" y="405" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#1E40AF">・ホットキーでテキスト自動入力</text>
+    
+    <rect x="70" y="430" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="200" y="455" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E40AF">IPC Handler</text>
+    <text x="200" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#1E40AF">・Rendererプロセスとの通信</text>
+    
+    <rect x="70" y="500" width="260" height="80" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="200" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1E40AF">Native Modules</text>
+    <text x="200" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#1E40AF">・robotjs (自動入力)</text>
+    <text x="200" y="565" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#1E40AF">・better-sqlite3 (DB)</text>
+  </g>
+  
+  <!-- Renderer Process (React) -->
+  <g filter="url(#shadow)">
+    <rect x="450" y="100" width="300" height="500" rx="15" fill="url(#rendererGrad)" stroke="#047857" stroke-width="2"/>
+    <text x="600" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">Renderer Process (React)</text>
+    
+    <!-- Renderer Components -->
+    <rect x="470" y="150" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="600" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#047857">App Component</text>
+    <text x="600" y="195" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#047857">・メインアプリケーション</text>
+    
+    <rect x="470" y="220" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="600" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#047857">UI Components</text>
+    <text x="600" y="265" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#047857">・ClipList, SearchBar, Modals</text>
+    
+    <rect x="470" y="290" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="600" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#047857">State Management</text>
+    <text x="600" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#047857">・React Hooks (useState)</text>
+    
+    <rect x="470" y="360" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="600" y="385" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#047857">API Layer</text>
+    <text x="600" y="405" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#047857">・window.api (IPC通信)</text>
+    
+    <rect x="470" y="430" width="260" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="600" y="455" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#047857">Styling</text>
+    <text x="600" y="475" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#047857">・Tailwind CSS</text>
+    
+    <rect x="470" y="500" width="260" height="80" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="600" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#047857">Build Tools</text>
+    <text x="600" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#047857">・Vite (ビルド)</text>
+    <text x="600" y="565" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#047857">・TypeScript</text>
+  </g>
+  
+  <!-- Database (SQLite) -->
+  <g filter="url(#shadow)">
+    <rect x="850" y="100" width="280" height="200" rx="15" fill="url(#dbGrad)" stroke="#D97706" stroke-width="2"/>
+    <text x="990" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">Database (SQLite)</text>
+    
+    <rect x="870" y="150" width="240" height="50" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="990" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#D97706">clips テーブル</text>
+    <text x="990" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#D97706">履歴・お気に入り・スニペット</text>
+    
+    <rect x="870" y="210" width="240" height="70" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="990" y="235" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#D97706">主要カラム</text>
+    <text x="990" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#D97706">・content (TEXT)</text>
+    <text x="990" y="265" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#D97706">・is_favorite, is_snippet</text>
+    <text x="990" y="275" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#D97706">・shortcut_key, snippet_name</text>
+  </g>
+  
+  <!-- System Integration -->
+  <g filter="url(#shadow)">
+    <rect x="850" y="350" width="280" height="250" rx="15" fill="url(#systemGrad)" stroke="#7C3AED" stroke-width="2"/>
+    <text x="990" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">System Integration</text>
+    
+    <rect x="870" y="400" width="240" height="50" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="990" y="425" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#7C3AED">macOS Clipboard</text>
+    <text x="990" y="440" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#7C3AED">システムクリップボード監視</text>
+    
+    <rect x="870" y="460" width="240" height="50" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="990" y="485" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#7C3AED">Global Shortcuts</text>
+    <text x="990" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#7C3AED">システム全体でのホットキー</text>
+    
+    <rect x="870" y="520" width="240" height="60" rx="8" fill="rgba(255,255,255,0.9)"/>
+    <text x="990" y="545" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#7C3AED">Accessibility API</text>
+    <text x="990" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#7C3AED">自動テキスト入力</text>
+    <text x="990" y="575" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#7C3AED">（権限が必要）</text>
+  </g>
+  
+  <!-- Arrows and Communication Flow -->
+  <!-- IPC Communication -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748B"/>
+    </marker>
+  </defs>
+  
+  <!-- Main <-> Renderer -->
+  <line x1="350" y1="300" x2="450" y2="300" stroke="#64748B" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <line x1="450" y1="320" x2="350" y2="320" stroke="#64748B" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="400" y="295" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B">IPC</text>
+  <text x="400" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#64748B">双方向通信</text>
+  
+  <!-- Main <-> Database -->
+  <line x1="350" y1="200" x2="850" y2="200" stroke="#64748B" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="600" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B">SQL queries</text>
+  
+  <!-- Main <-> System -->
+  <line x1="350" y1="450" x2="850" y2="500" stroke="#64748B" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="600" y="470" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#64748B">Native APIs</text>
+  
+  <!-- Data Flow Labels -->
+  <rect x="50" y="650" width="1100" height="120" rx="10" fill="#F1F5F9" stroke="#CBD5E1"/>
+  <text x="600" y="675" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1E293B">データフロー</text>
+  
+  <text x="70" y="700" font-family="Arial, sans-serif" font-size="12" fill="#1E293B">1. ユーザーがテキストをコピー → Main ProcessがClipboard変更を検知</text>
+  <text x="70" y="720" font-family="Arial, sans-serif" font-size="12" fill="#1E293B">2. Main Process → Database: 新しいクリップを保存</text>
+  <text x="70" y="740" font-family="Arial, sans-serif" font-size="12" fill="#1E293B">3. Main Process → Renderer Process: 新しいデータを通知 (IPC)</text>
+  <text x="70" y="760" font-family="Arial, sans-serif" font-size="12" fill="#1E293B">4. ユーザーがホットキーを押下 → Main Processがウィンドウを表示</text>
+</svg>
+    </div>
+    <script>
+        // SVGをcanvasに描画してPNGとしてダウンロード
+        const svg = document.querySelector('svg');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = 1200;
+        canvas.height = 800;
+        
+        const data = new XMLSerializer().serializeToString(svg);
+        const svgBlob = new Blob([data], {type: 'image/svg+xml;charset=utf-8'});
+        const url = URL.createObjectURL(svgBlob);
+        
+        const img = new Image();
+        img.onload = function() {
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob(function(blob) {
+                const link = document.createElement('a');
+                link.download = 'system-architecture.png';
+                link.href = URL.createObjectURL(blob);
+                link.click();
+            });
+        };
+        img.src = url;
+    </script>
+</body>
+</html>

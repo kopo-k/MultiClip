@@ -5,10 +5,25 @@ import HelpModal from './HelpModal';
 
 interface HeaderBarProps {
   onSettingsClick?: () => void;
+  globalShortcut?: string;
 }
 
-const HeaderBar: React.FC<HeaderBarProps> = ({ onSettingsClick }) => {
+const HeaderBar: React.FC<HeaderBarProps> = ({ onSettingsClick, globalShortcut }) => {
   const [showHelp, setShowHelp] = useState(false);
+
+  // ショートカットキーの表示形式を整える
+  const formatShortcut = (shortcut: string | undefined) => {
+    if (!shortcut) return '⌘+Shift+C'; // デフォルト
+    
+    return shortcut
+      .replace('CommandOrControl', '⌘')
+      .replace('Command', '⌘')
+      .replace('Cmd', '⌘')
+      .replace('Shift', 'Shift')
+      .replace('Alt', 'Option')
+      .replace('Control', 'Ctrl')
+      .replace('Ctrl', 'Ctrl');
+  };
 
   return (
     <>
@@ -17,7 +32,10 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ onSettingsClick }) => {
           <Clipboard className="w-6 h-6 text-blue-500" />
           <h1 className="text-xl font-bold">MultiClip</h1>
         </div>
-        <div className="flex gap-3 no-drag">
+        <div className="flex items-center gap-3 no-drag">
+          <div className="flex items-center bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-sm font-medium">
+            {formatShortcut(globalShortcut)}
+          </div>
           <button title="設定" onClick={onSettingsClick}>
             <Settings className="w-5 h-5 text-gray-600 hover:text-black" />
           </button>

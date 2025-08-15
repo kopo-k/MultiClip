@@ -11,10 +11,15 @@ let intervalId: NodeJS.Timeout | null = null;
  */
 export function startClipboardWatcher(onChange: (text: string) => void, intervalMs = 1000) {
   if (intervalId) return; // 二重起動を防止
+  
+  // 初期値を設定
+  lastText = clipboard.readText();
+  
   // クリップボードの内容を監視し、変更があれば onChange を呼び出す
   intervalId = setInterval(() => {
     const currentText = clipboard.readText();
     if (currentText && currentText !== lastText) {
+      console.log('Clipboard changed:', currentText.substring(0, 50) + '...');
       lastText = currentText;
       try {
         addClip(currentText); // クリップボードの内容をDBに保存する
